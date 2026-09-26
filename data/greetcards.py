@@ -92,7 +92,7 @@ def fetch_greetcards():
                 try:
                     # Extract features
                     features = {
-                        "title": card["title"],
+                        "title": card["title"].replace('"', ""),
                         "url": card["src"]
                     }
                     

@@ -4,6 +4,11 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Открытки</title>
+        <link rel="manifest" href="manifest.json">
+        <meta name="theme-color" content="#ffffff">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
         <style>
             * {
                 box-sizing: border-box;
@@ -137,7 +142,6 @@
                 cursor: pointer;
             }
         </style>
-        <link rel="stylesheet" href="style.css">
     </head>
     <body>
         <div class="sticky-controls">
@@ -150,33 +154,18 @@
                 <img id="modalImg">
                 <button id="shareBtn">Поделиться</button>
                 <button id="copyBtn">Копировать ссылку</button>
-                <!--button id="openBtn">Открыть</button-->
                 <button id="closeBtn">Закрыть</button>
             </div>
         </div>
         <script>
             const categories = [
-                {
-                    name: "Доброе утро",
-                    keywords: [
-                        "добрым утром",
-                        "доброе утро"
-                    ]
-                },
-
-                {
-                    name: "Понедельник",
-                    keywords: [
-                        "понедельник"
-                    ]
-                },
-
-                {
-                    name: "Молчишь",
-                    keywords: [
-                        "молчишь"
-                    ]
-                }
+                { name: "Доброе утро", keywords: ["утр"] },
+                { name: "Спокойной ночи", keywords: ["ноч"] },
+                { name: "Люблю тебя", keywords: ["юблю", "скучаю"] },
+                { name: "Подруге", keywords: ["одруг", "енщин"] },
+                { name: "Поры года", keywords: ["весна", "лето", "осень", "зима"] },
+                { name: "С днём рождения", keywords: ["ождения"] },
+                { name: "С Новым Годом", keywords: ["овым"] },
             ];
 
             let allCards = [];
@@ -194,21 +183,28 @@
                             title: line.slice(0, comma).trim(),
                             url: line.slice(comma + 1).trim()
                         };
-                    }); createCategoryButtons();
-                    showRandomCards();
+                    }); allCards = [...new Map(
+                    allCards.map(card => [card.url, card])
+                ).values()]; createCategoryButtons();
+                showRandomCards();
             }
 
             function showRandomCards() {
                 const randomCards = [];
+                const usedUrls = new Set();
                 categories.forEach(category => {
                     const matches = allCards.filter(card => {
                         const title = card.title.toLowerCase();
-                        return category.keywords.some(keyword => title.includes(keyword.toLowerCase()));
+                        return category.keywords.some(keyword =>
+                            title.includes(keyword.toLowerCase())
+                        ) && !usedUrls.has(card.url);
                     }); if (matches.length > 0) {
                         const randomCard = matches[Math.floor(Math.random() * matches.length)];
                         randomCards.push(randomCard);
+                        usedUrls.add(randomCard.url);
                     }
                 }); renderCards(randomCards);
+                scrollToTop();
             }
 
             function createCategoryButtons() {
@@ -217,7 +213,7 @@
                     const btn = document.createElement("button");
                     btn.className = "category-btn";
                     btn.innerText = cat.name;
-                    btn.onclick = () => { showCategory(cat); };
+                    btn.onclick = () => { showCategory(cat); scrollToTop(); };
                     container.appendChild(btn);
                 });
             }
@@ -225,9 +221,10 @@
             function showCategory(category) {
                 let found = allCards.filter(card => {
                     const title = card.title.toLowerCase();
-                    return category.keywords.some(k => title.includes(k.toLowerCase()));
+                    return category.keywords.some(keyword => title.includes(keyword.toLowerCase()));
                 }); found = shuffle(found).slice(0, 10);
                 renderCards(found);
+                scrollToTop();
             }
 
             function renderCards(cards) {
@@ -266,26 +263,17 @@
                         await navigator.clipboard.writeText(selectedCard.url);
                         alert("Ссылка скопирована");
                         return;
-                    }
-
-                    const textarea = document.createElement("textarea");
+                    } const textarea = document.createElement("textarea");
                     textarea.value = selectedCard.url;
                     textarea.style.position = "fixed";
                     textarea.style.opacity = "0";
                     document.body.appendChild(textarea);
                     textarea.focus();
                     textarea.select();
-
                     const success = document.execCommand("copy");
-
                     document.body.removeChild(textarea);
-
-                    if (success) {
-                        alert("Ссылка скопирована");
-                    } else {
-                        alert("Не удалось скопировать ссылку");
-                    }
-
+                    if (success) alert("Ссылка скопирована");
+                    else alert("Не удалось скопировать ссылку");
                 } catch (error) {
                     console.error("Copy error:", error);
                     alert("Не удалось скопировать ссылку");
@@ -294,6 +282,7 @@
 
             document.getElementById("randomBtn").onclick = () => {
                 showRandomCards();
+                scrollToTop();
             };
 
             document.getElementById("shareBtn").onclick = async () => {
@@ -302,25 +291,31 @@
                         await navigator.share({
                             title: selectedCard.title,
                             url: selectedCard.url
-                        });
-                        return;
-                    }
-
-                    await navigator.clipboard.writeText(selectedCard.url);
+                        }); return;
+                    } await navigator.clipboard.writeText(selectedCard.url);
                     alert("Ссылка скопирована");
-
                 } catch (error) {
                     console.error("Share error:", error);
-
-                    if (error.name === "AbortError") {
-                        return;
-                    }
-
+                    if (error.name === "AbortError") return;
                     alert("Не удалось открыть меню отправки");
                 }
             };
-
-            loadCSV();
+            
+            function scrollToTop() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                });
+            } loadCSV();
+        </script>
+        <script>
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker.register("./sw.js")
+                        .then(() => console.log("PWA service worker registered"))
+                        .catch(error => console.error("PWA error:", error));
+                });
+            }
         </script>
     </body>
 </html>

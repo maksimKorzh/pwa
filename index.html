@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Открытки</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background: #f3f3f3;
+                font-family: Arial, sans-serif;
+            }
+
+            .sticky-controls {
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                background: white;
+                padding-top: 8px;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            }
+
+            #categories {
+                display: flex;
+                overflow-x: auto;
+                gap: 10px;
+                padding: 12px;
+                background: white;
+                position: static;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            #categories::-webkit-scrollbar {
+                display: none;
+            }
+
+            .category-btn {
+                flex-shrink: 0;
+                border: none;
+                background: #4f46e5;
+                color: white;
+                padding: 12px 18px;
+                border-radius: 999px;
+                white-space: nowrap;
+                font-size: 16px;
+                cursor: pointer;
+            }
+
+            .category-btn:active {
+                transform: scale(0.98);
+            }
+
+            #randomBtn {
+                display: block;
+                width: calc(100% - 20px);
+                margin: 0 auto;
+                padding: 14px;
+                border: none;
+                border-radius: 14px;
+                background: #222;
+                color: white;
+                font-size: 16px;
+                font-weight: bold;
+                cursor: pointer;
+            }
+
+            #randomBtn:active {
+                transform: scale(0.98);
+            }
+
+            #cards {
+                padding: 10px;
+                display: grid;
+                gap: 12px;
+            }
+
+            .card {
+                background: white;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .card img {
+                width: 100%;
+                display: block;
+            }
+
+            .card-title {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            #modal {
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.7);
+                display: flex;
+                align-items: end;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            .modal-content {
+                width: 100%;
+                background: white;
+                padding: 20px;
+                border-radius: 20px 20px 0 0;
+            }
+
+            .modal-content img {
+                width: 100%;
+                border-radius: 12px;
+            }
+
+            .modal-content button {
+                width: 100%;
+                padding: 14px;
+                margin-top: 10px;
+                border: none;
+                border-radius: 12px;
+                background: #4f46e5;
+                color: white;
+                font-size: 16px;
+                cursor: pointer;
+            }
+        </style>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+        <div class="sticky-controls">
+            <button id="randomBtn"> 🎲 Ещё открытки</button>
+            <section id="categories"></section>
+        </div>
+        <section id="cards"></section>
+        <div id="modal" class="hidden">
+            <div class="modal-content">
+                <img id="modalImg">
+                <button id="shareBtn">Поделиться</button>
+                <button id="copyBtn">Копировать ссылку</button>
+                <!--button id="openBtn">Открыть</button-->
+                <button id="closeBtn">Закрыть</button>
+            </div>
+        </div>
+        <script>
+            const categories = [
+                {
+                    name: "Доброе утро",
+                    keywords: [
+                        "добрым утром",
+                        "доброе утро"
+                    ]
+                },
+
+                {
+                    name: "Понедельник",
+                    keywords: [
+                        "понедельник"
+                    ]
+                },
+
+                {
+                    name: "Молчишь",
+                    keywords: [
+                        "молчишь"
+                    ]
+                }
+            ];
+
+            let allCards = [];
+            let selectedCard = null;
+
+            async function loadCSV() {
+                const response = await fetch("data/greetcards.csv");
+                const text = await response.text();
+                allCards = text
+                    .split("\n")
+                    .filter(x => x.trim())
+                    .map(line => {
+                        const comma = line.indexOf(",");
+                        return {
+                            title: line.slice(0, comma).trim(),
+                            url: line.slice(comma + 1).trim()
+                        };
+                    }); createCategoryButtons();
+                    showRandomCards();
+            }
+
+            function showRandomCards() {
+                const randomCards = [];
+                categories.forEach(category => {
+                    const matches = allCards.filter(card => {
+                        const title = card.title.toLowerCase();
+                        return category.keywords.some(keyword => title.includes(keyword.toLowerCase()));
+                    }); if (matches.length > 0) {
+                        const randomCard = matches[Math.floor(Math.random() * matches.length)];
+                        randomCards.push(randomCard);
+                    }
+                }); renderCards(randomCards);
+            }
+
+            function createCategoryButtons() {
+                const container = document.getElementById("categories");
+                categories.forEach(cat => {
+                    const btn = document.createElement("button");
+                    btn.className = "category-btn";
+                    btn.innerText = cat.name;
+                    btn.onclick = () => { showCategory(cat); };
+                    container.appendChild(btn);
+                });
+            }
+
+            function showCategory(category) {
+                let found = allCards.filter(card => {
+                    const title = card.title.toLowerCase();
+                    return category.keywords.some(k => title.includes(k.toLowerCase()));
+                }); found = shuffle(found).slice(0, 10);
+                renderCards(found);
+            }
+
+            function renderCards(cards) {
+                const container = document.getElementById("cards");
+                container.innerHTML = "";
+                cards.forEach(card => {
+                    const div = document.createElement("div");
+                    div.className = "card";
+                    div.innerHTML = `
+                        <img loading="lazy" src="${card.url}">
+                        <div class="card-title">
+                            ${card.title}
+                        </div>
+                    `; div.onclick = () => openModal(card);
+                    container.appendChild(div);
+                });
+            }
+
+            function shuffle(arr) {
+                return [...arr].sort(() => Math.random() - 0.5 );
+            }
+
+            function openModal(card) {
+                selectedCard = card;
+                document.getElementById("modalImg").src = card.url;
+                document.getElementById("modal").classList.remove("hidden");
+            }
+
+            document.getElementById("closeBtn").onclick = () => {
+                document .getElementById("modal").classList.add("hidden");
+            };
+
+            document.getElementById("copyBtn").onclick = async () => {
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(selectedCard.url);
+                        alert("Ссылка скопирована");
+                        return;
+                    }
+
+                    const textarea = document.createElement("textarea");
+                    textarea.value = selectedCard.url;
+                    textarea.style.position = "fixed";
+                    textarea.style.opacity = "0";
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+
+                    const success = document.execCommand("copy");
+
+                    document.body.removeChild(textarea);
+
+                    if (success) {
+                        alert("Ссылка скопирована");
+                    } else {
+                        alert("Не удалось скопировать ссылку");
+                    }
+
+                } catch (error) {
+                    console.error("Copy error:", error);
+                    alert("Не удалось скопировать ссылку");
+                }
+            };
+
+            document.getElementById("randomBtn").onclick = () => {
+                showRandomCards();
+            };
+
+            document.getElementById("shareBtn").onclick = async () => {
+                try {
+                    if (navigator.share) {
+                        await navigator.share({
+                            title: selectedCard.title,
+                            url: selectedCard.url
+                        });
+                        return;
+                    }
+
+                    await navigator.clipboard.writeText(selectedCard.url);
+                    alert("Ссылка скопирована");
+
+                } catch (error) {
+                    console.error("Share error:", error);
+
+                    if (error.name === "AbortError") {
+                        return;
+                    }
+
+                    alert("Не удалось открыть меню отправки");
+                }
+            };
+
+            loadCSV();
+        </script>
+    </body>
+</html>

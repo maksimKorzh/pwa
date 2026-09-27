@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afterword — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 9</div>
+            <h2>Afterword</h2>
+            <p>We have now reached the end of the project. What started as a simple collection of greeting cards became a complete small web application: we collected a dataset, built an HTML structure, styled it with CSS, added JavaScript functionality, served it locally, deployed it to GitHub Pages, and turned it into a Progressive Web App.</p>
+            <p>The project was intentionally built without a large framework or complicated backend. Everything important is visible in a relatively small number of files, which makes the application easy to understand, modify, move, and reuse.</p>
+            <h3>What We Built</h3>
+            <p>The finished project consists of a static web application that loads greeting-card data from a CSV file, organizes the cards into categories, displays randomly selected cards, allows users to browse categories, and provides a modal interface for sharing or copying card links.</p>
+            <p>We also created a small Python data-collection program that builds the dataset before the website is published. The browser does not need to scrape the original website every time somebody opens the application. Instead, the scraper prepares the data and the web application consumes the resulting CSV file.</p>
+            <p>Finally, we added the components required for a Progressive Web App: a web app manifest, application icons, and a service worker that caches the application shell.</p>
+            <h3>Skills You Have Obtained</h3>
+            <p>After completing this project, you have practiced much more than writing a few lines of HTML. You have worked through a complete small software project from data collection to deployment.</p>
+            <p>You learned the foundations of <strong>HTML</strong>: document structure, semantic elements, links, buttons, images, sections, attributes, and the relationship between the page structure and JavaScript.</p>
+            <p>You learned the foundations of <strong>CSS</strong>: selectors, classes, IDs, layout, spacing, colors, borders, responsive design, sticky controls, grids, scrolling areas, and modal interfaces.</p>
+            <p>You learned practical <strong>JavaScript</strong>: variables, arrays, objects, functions, loops, filtering, random selection, sets, maps, DOM manipulation, event handlers, template literals, asynchronous functions, and browser APIs.</p>
+            <p>You also learned how JavaScript can load external data using <code>fetch()</code>, transform text into application data, remove duplicates, search data using keywords, and dynamically generate the user interface.</p>
+            <p>On the Python side, you learned the basic principles of <strong>web scraping</strong>: making HTTP requests, using a User-Agent, parsing HTML with BeautifulSoup, finding elements using HTML structure and CSS classes, handling pagination, and writing collected information to a UTF-8 CSV file.</p>
+            <p>You also learned how to run a simple <strong>HTTP development server</strong>, why opening an application directly with <code>file://</code> is different from serving it through HTTP, and how relative URLs and browser security rules affect web applications.</p>
+            <p>Finally, you learned the basic architecture of a <strong>PWA</strong>: the manifest describes the application, icons provide installable branding, and the service worker provides a programmable caching layer between the browser and the network.</p>
+            <h3>These Skills Are Reusable</h3>
+            <p>The most important result of this project is not the greeting-card application itself. The important result is that the same techniques can be reused for many other applications.</p>
+            <p>If you have a collection of products, photographs, recipes, quotations, documents, articles, game positions, or other structured information, the same basic architecture can often be adapted to display and search that information in a browser.</p>
+            <p>If your data comes from an existing website, you can create a separate Python data-collection tool that periodically prepares a local dataset. If the data already exists in CSV or JSON form, you can skip scraping and load the data directly into your application.</p>
+            <p>If the application needs a database, authentication, user accounts, or server-side processing, you can keep the same HTML, CSS, and JavaScript fundamentals and add a backend later. The simple project you built here is therefore not a dead end. It is a foundation.</p>
+            <h3>Building Similar PWAs</h3>
+            <p>Progressive Web Apps are particularly useful for applications that are primarily interfaces around data, tools, or interactive functionality. A PWA can provide a convenient Home Screen or application-style experience without requiring you to build and distribute a traditional native application for every platform.</p>
+            <p>Examples include personal reference tools, catalogs, documentation viewers, educational applications, calculators, dashboards, collections, small productivity tools, offline-friendly forms, image galleries, and many kinds of interactive games.</p>
+            <p>For example, you could build a <strong>chess client</strong> as a PWA. The browser could display a chessboard, communicate with a chess server through WebSocket, show clocks and game information, and provide an interface for entering moves. A local JavaScript chess library or a WebAssembly engine could provide additional functionality.</p>
+            <p>The same idea applies to a <strong>Game of Go client</strong>. The application could provide a board interface, communicate with an online Go server, display game records, manage clocks, and provide analysis tools.</p>
+            <p>In fact, many applications that might traditionally have been written as desktop clients can be good candidates for a PWA when their communication and performance requirements fit the browser environment.</p>
+            <h3>Custom Chess and Game Clients</h3>
+            <p>A particularly interesting use of the skills from this book is building a custom client for an existing online service. The website or service may already provide a graphical interface, but you can sometimes create your own interface that communicates with the same public or documented protocols.</p>
+            <p>For example, a custom chess client could separate the application into several layers:</p>
+            <pre><code>HTML/CSS
+    ↓
+Chess board and user interface
+    ↓
+JavaScript application logic
+    ↓
+WebSocket or HTTP communication
+    ↓
+Chess server</code></pre>
+            <p>A chess engine can then become another independent component. Instead of implementing the chess engine itself in JavaScript, the application could communicate with an engine through an appropriate browser-compatible interface or use a WebAssembly build of an engine.</p>
+            <p>This separation is powerful because the board interface, network protocol, game state, and engine can be developed independently. The same architectural idea can be applied to Go clients, card games, board games, puzzle applications, and other interactive services.</p>
+            <h3>Creating Your Own Version of an Existing Website</h3>
+            <p>Another practical application of these skills is creating a custom interface around an existing website or service. You might prefer a different layout, want a mobile-first interface, need a specialized workflow, or simply want to learn how a particular service works by implementing a compatible client.</p>
+            <p>This is sometimes described informally as making a "copy" of a website, but there is an important distinction between copying an interface for learning or creating an independent client and copying somebody else's protected content, branding, code, or service without permission.</p>
+            <p>The technical skills are broadly useful either way: inspect the information available to the browser, understand the HTML structure, identify the data and communication patterns, reproduce the parts you are legally allowed to reproduce, and build your own interface around them.</p>
+            <p>For public data, always check the website's terms of service, robots.txt instructions where applicable, licensing conditions, copyright restrictions, rate limits, and any applicable laws before collecting or redistributing it. A technically possible action is not automatically a permitted one.</p>
+            <p>Similarly, when working with an API or WebSocket service, prefer documented APIs and protocols when they are available. If you are building a custom client for a service, you should also respect authentication requirements, usage limits, and the service's rules.</p>
+            <h3>From a Small Website to a Larger Application</h3>
+            <p>The greeting-card application deliberately avoids unnecessary complexity. That is a feature, not a limitation.</p>
+            <p>When an application becomes larger, the same foundation can gradually be extended. A CSV file can become a JSON API or database. Static JavaScript can be separated into modules. A simple service worker can become a more sophisticated caching strategy. A local dataset can be replaced by a backend. Authentication, user accounts, synchronization, search indexes, analytics, and real-time communication can be added when the project actually needs them.</p>
+            <p>The important engineering lesson is to avoid adding complexity simply because a technology exists. Start with the smallest architecture that solves the problem, then expand it when the requirements justify doing so.</p>
+            <h3>Why Build a PWA Instead of a Native App?</h3>
+            <p>A PWA does not replace native applications in every situation. Native applications can provide capabilities, integrations, performance characteristics, and distribution mechanisms that may not be available or may be less convenient in a browser.</p>
+            <p>However, a PWA can be an excellent choice when the application mainly consists of a web interface, network communication, structured data, and browser-supported functionality. One codebase can serve desktop and mobile browsers, and the application can be published through an ordinary web server.</p>
+            <p>For an independent developer or a small project, this can dramatically reduce the amount of infrastructure needed to publish an application.</p>
+            <h3>The Real Value of the Project</h3>
+            <p>The greeting-card application itself is intentionally simple. Its purpose is to teach a complete development process rather than demonstrate every modern web technology.</p>
+            <p>You started with an idea, collected data, wrote code, tested it locally, solved browser-related problems, created a mobile interface, deployed the application, and added PWA functionality. That workflow is much more valuable than any individual code fragment in the project.</p>
+            <p>Once you understand that workflow, the subject of the application can change completely. The same approach can be used to build a recipe browser, a personal knowledge base, a game client, a chess board, a Go client, a photo catalog, a study tool, a dashboard, or a specialized interface for an existing online service.</p>
+            <h3>A Note About the Book</h3>
+            <p>This project and the knowledge presented in this book are provided for free. I believe that code, programming knowledge, and the ability to learn from them should remain accessible to everyone.</p>
+            <p>At the same time, creating a project like this book takes considerable time and effort. Writing explanations, preparing examples, testing code, correcting mistakes, maintaining the project, and turning practical experience into a structured learning resource all require work.</p>
+            <p>If you found this book useful and would like to support the time and effort behind it, donations to <strong>maksymkorzh@gmail.com</strong> are very much appreciated.</p>
+            <p>However, a donation is completely optional. The book remains free because I believe the knowledge itself should be free.</p>
+            <p>There is an important distinction between <strong>knowledge</strong> and <strong>service</strong>. Knowledge and source code can be shared freely so that other people can learn, experiment, and build their own projects. When a particular client asks someone to spend their time solving a specific problem, building a custom application, providing support, or delivering another service, that person's time and work should be paid for.</p>
+            <p>This distinction is one of the principles behind the project: <strong>knowledge should be shared, while professional time and services should be valued.</strong></p>
+            <h3>Keep Building</h3>
+            <p>The best way to finish this book is not to stop here. Take the project apart. Change the design. Replace the dataset. Add a search box. Add another category. Create a completely different application using the same architecture.</p>
+            <p>Try building something that you personally need. A small useful application is often a better learning project than an artificial exercise because every new problem has a practical purpose.</p>
+            <p>You now have the basic skills to take an idea, turn data into an application, make the interface interactive, serve it through HTTP, publish it on the web, and package it as a PWA.</p>
+            <p>From here, the possibilities are up to you.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="install.html">← Previous</a>
+                <a href="contents.html" class="next">CONTENTS →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

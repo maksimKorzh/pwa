@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Development HTTP Server — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 5</div>
+            <h2>Develompent HTTP Server</h2>
+                <p>At this point, we have an <code>index.html</code> file with HTML and CSS in it and we also have a CSV dataset. It might seem that we can simply double-click <code>index.html</code> and start developing the application.</p>
+                <p>However, there is an important difference between opening an HTML file directly from the computer and opening it through a web server. Our application will use JavaScript to load <code>data/greetcards.csv</code>, and browsers apply security rules to requests made by JavaScript. If we simply open <code>index.html</code> from the file system, the CSV request will not work correctly in the normal way we need.</p>
+                <p>For this reason, during development we will run a small local HTTP server. The server will make our project behave much more like a real website while we are still working on our own computer.</p>
+                <h3>Opening index.html Directly</h3>
+                <p>If we double-click <code>index.html</code>, the browser opens it using a <code>file://</code> URL.</p>
+                <p>Instead of something like:</p>
+                <pre><code>http://localhost:8000/index.html</code></pre>
+                <p>the browser will show a location similar to:</p>
+                <pre><code>file:///C:/path/to/project/index.html</code></pre>
+                <p>This means that the browser is reading the HTML file directly from the local file system rather than receiving it from an HTTP server.</p>
+                <p>For a completely static HTML page, this can sometimes appear to work perfectly. The browser can read the HTML, apply the CSS, and execute JavaScript that does not require network requests.</p>
+                <p>Our application, however, is going to load the CSV dataset using JavaScript. That changes the situation.</p>
+                <h3>Our JavaScript Needs to Fetch the CSV</h3>
+                <p>Later in the application, we will use code similar to this:</p>
+                <pre><code>async function loadCSV() {
+    const response = await fetch("data/greetcards.csv");
+    const text = await response.text();
+
+    // Process CSV data...
+}</code></pre>
+                <p>The important part is <code>fetch()</code>.</p>
+                <p>The browser is being asked to make an HTTP request for:</p>
+                <pre><code>data/greetcards.csv</code></pre>
+                <p>This works naturally when the application itself is being served over HTTP or HTTPS. The browser knows that the application came from a web server and can resolve the relative URL against that server.</p>
+                <p>When the page is opened using <code>file://</code>, there is no web server involved. The browser is dealing with a local file instead of a normal web origin, and requests made with <code>fetch()</code> are subject to browser security restrictions.</p>
+                <h3>Why Does the Browser Care?</h3>
+                <p>Modern browsers are designed to protect users from malicious web pages.</p>
+                <p>Imagine that any HTML file on your computer could freely use JavaScript to read arbitrary files from your hard drive. A web page could potentially try to access private documents, configuration files, saved information, or other sensitive data.</p>
+                <p>Browsers therefore enforce security boundaries around web pages. One of the concepts involved is the <strong>origin</strong>.</p>
+                <p>An origin is broadly determined by the protocol, host, and port from which a resource is served. For example:</p>
+                <pre><code>http://localhost:8000
+https://example.com
+https://example.org</code></pre>
+                <p>These are different origins.</p>
+                <p>A page loaded from <code>file://</code> does not behave like a normal web page served from an HTTP origin. This is one of the reasons why developing a JavaScript application by simply double-clicking the HTML file can produce confusing errors.</p>
+                <h3>The Solution: A Local HTTP Server</h3>
+                <p>Fortunately, we do not need a complicated server or a backend framework.</p>
+                <p>Our application consists of static files, so all we need during development is a simple static HTTP server.</p>
+                <p>Because Python is already being used for our scraping script, we can use Python's built-in HTTP server.</p>
+                <p>There is no need to install another package for this.</p>
+                <h3>Python's Built-In HTTP Server</h3>
+                <p>Python includes a module called <code>http.server</code>. It can serve files from a directory over HTTP.</p>
+                <p>Open a terminal in the root directory of the project, where <code>index.html</code> is located, and run:</p>
+                <pre><code>python -m http.server</code></pre>
+                <p>Python will start a small development web server.</p>
+                <p>By default, the server listens on port <code>8000</code>.</p>
+                <p>You should see output similar to:</p>
+                <pre><code>Serving HTTP on :: port 8000 (http://[::]:8000/) ...</code></pre>
+                <p>The exact message can differ slightly depending on the operating system and Python version, but the important part is that the server is running on port <code>8000</code>.</p>
+                <h3>Opening the Application Through the Server</h3>
+                <p>Now open a browser and go to:</p>
+                <pre><code>http://localhost:8000</code></pre>
+                <p>You can also explicitly open:</p>
+                <pre><code>http://localhost:8000/index.html</code></pre>
+                <p>The browser is now receiving the application from a local HTTP server rather than reading the HTML directly from the file system.</p>
+                <p>The address <code>localhost</code> means your own computer. It does not refer to a remote website.</p>
+                <p>The port <code>8000</code> identifies the particular network service that Python started.</p>
+                <h3>What Does localhost Mean?</h3>
+                <p><code>localhost</code> is a special hostname that refers back to the computer you are currently using.</p>
+                <p>When you open:</p>
+                <pre><code>http://localhost:8000</code></pre>
+                <p>you are not connecting to the public internet to find your application. Your browser is connecting to the Python server running locally on your own computer.</p>
+                <p>The complete flow looks like this:</p>
+                <pre><code>Browser
+    ↓
+http://localhost:8000
+    ↓
+Python http.server
+    ↓
+Project directory
+    ↓
+index.html
+data/greetcards.csv
+manifest.json
+sw.js
+icons/</code></pre>
+                <p>The HTTP server simply provides these static files to the browser when the browser requests them.</p>
+                <h3>Why Start the Server in the Project Root?</h3>
+                <p>It is important to run the command from the directory that contains the files you want to serve.</p>
+                <p>Our project structure looks like this:</p>
+                <pre><code>project/
+    index.html
+    data/
+        greetcards.py
+        greetcards.csv</code></pre>
+                <p>Therefore, we open the terminal in <code>project/</code> and run:</p>
+                <pre><code>python -m http.server</code></pre>
+                <p>Python treats the current directory as the root of the web server.</p>
+                <p>That means a browser request for:</p>
+                <pre><code>http://localhost:8000/index.html</code></pre>
+                <p>maps to:</p>
+                <pre><code>project/index.html</code></pre>
+                <p>and a request for:</p>
+                <pre><code>http://localhost:8000/data/greetcards.csv</code></pre>
+                <p>maps to:</p>
+                <pre><code>project/data/greetcards.csv</code></pre>
+                <p>This is exactly the directory structure that our JavaScript expects.</p>
+                <h3>Relative URLs Now Make Sense</h3>
+                <p>Our JavaScript uses a relative URL:</p>
+                <pre><code>fetch("data/greetcards.csv")</code></pre>
+                <p>Because the page is being served from:</p>
+                <pre><code>http://localhost:8000/</code></pre>
+                <p>the browser resolves the relative path as:</p>
+                <pre><code>http://localhost:8000/data/greetcards.csv</code></pre>
+                <p>The Python server receives that request and returns the CSV file.</p>
+                <p>This is one of the major reasons for using a local HTTP server during development. The same relative paths will later work when the application is deployed to a real web server.</p>
+                <h3>Testing the CSV Request</h3>
+                <p>Once the server is running, you can directly test the CSV file in the browser.</p>
+                <p>Open:</p>
+                <pre><code>http://localhost:8000/data/greetcards.csv</code></pre>
+                <p>The browser should be able to request the file from the local server.</p>
+                <p>This is a useful debugging technique. If the CSV file does not load here, the problem is probably related to the file path, project structure, server directory, or the file itself rather than the JavaScript filtering code.</p>
+                <h3>Checking the Browser Console</h3>
+                <p>The browser's developer tools are extremely useful during development.</p>
+                <p>If the application fails to load the CSV, open the developer tools and look at the Console and Network tabs.</p>
+                <p>The Console may show an error explaining why JavaScript failed. The Network tab allows you to see requests made by the page, including the request for <code>greetcards.csv</code>.</p>
+                <p>This gives us a much better debugging environment than simply opening an HTML file directly.</p>
+                <h3>HTTP Is Enough for Development</h3>
+                <p>Notice that our local server uses <code>http://</code>, not <code>https://</code>.</p>
+                <p>For basic development, that is perfectly fine. We mainly need an HTTP origin so that the browser treats the project like a normal web application and allows our static resources to be requested through normal web URLs.</p>
+                <p>We do not need to configure certificates or encryption for a server that exists only on our own computer.</p>
+                <h3>Starting the Server on Another Port</h3>
+                <p>If port <code>8000</code> is already being used by another program, Python allows us to specify a different port.</p>
+                <pre><code>python -m http.server 8080</code></pre>
+                <p>The application would then be available at:</p>
+                <pre><code>http://localhost:8080</code></pre>
+                <p>The port number is simply part of the local address. The rest of the project works in exactly the same way.</p>
+                <h3>Stopping the Server</h3>
+                <p>The Python server continues running until we stop it.</p>
+                <p>To stop it, assuming you are using GitBash on Windows or Linux Terminal, focus the terminal where the server is running and press:</p>
+                <pre><code>Ctrl + C</code></pre>
+                <p>The server will stop, and the browser will no longer be able to retrieve files from <code>localhost:8000</code> until we start it again.</p>
+                <h3>The Development Workflow</h3>
+                <p>From now on, our normal development workflow will be very simple.</p>
+                <pre><code>1. Open the project directory.
+2. Start the Python HTTP server.
+3. Open http://localhost:8000 in the browser.
+4. Edit index.html.
+5. Save the file.
+6. Reload the browser.
+7. Test the change.
+8. Repeat.</code></pre>
+                <p>The Python server does not need to be restarted every time we edit a file. It serves the files from the directory whenever the browser requests them.</p>
+                <p>Usually, saving a change and refreshing the page is enough to see the new version.</p>
+                <h3>The Server Does Not Build the Application</h3>
+                <p>It is important to understand what <code>python -m http.server</code> does not do.</p>
+                <p>It does not compile our JavaScript. It does not process our CSS. It does not run Python scraping code automatically. It does not create a database. It does not provide an application backend.</p>
+                <p>It is simply a small static file server.</p>
+                <p>When the browser requests a file, the server reads that file from disk and sends it back to the browser.</p>
+                <p>This is exactly what our project needs during development because the application itself is a static web application.</p>
+                <h3>Development Server Versus Production Hosting</h3>
+                <p>There is an important difference between our local development server and the final hosting environment.</p>
+                <p>During development we use:</p>
+                <pre><code>http://localhost:8000</code></pre>
+                <p>When the application is published, it will be hosted on GitHub Pages and accessed through HTTPS.</p>
+                <p>Our local Python server is therefore a development tool. It lets us reproduce the basic behavior of a real web server without requiring an internet connection or a hosting account.</p>
+                <h3>Why GitHub Pages Matters for This Project</h3>
+                <p>Our final application is made from static files. There is no backend that needs to execute Python or another server-side programming language when a user opens the application.</p>
+                <p>This makes static hosting a natural fit.</p>
+                <p>The files can be uploaded to a GitHub repository, and GitHub Pages can serve those files as a public website.</p>
+                <p>The resulting application will have a normal HTTPS address, which is important for some browser APIs used by our application.</p>
+                <h3>Sharing Greeting Cards Requires More Than Local HTTP</h3>
+                <p>One of the features of our application will be a Share button. On a mobile device, we want the user to be able to select an application such as WhatsApp or another installed sharing application from the operating system's share interface.</p>
+                <p>The JavaScript API involved is the Web Share API:</p>
+                <pre><code>navigator.share({
+    title: selectedCard.title,
+    url: selectedCard.url
+});</code></pre>
+                <p>Browser security rules are important here. Features such as the Web Share API are intended to operate in secure contexts, which generally means HTTPS for a real deployed website, with special treatment for local development origins such as <code>localhost</code>.</p>
+                <p>Our local HTTP server is therefore useful for testing the application's basic behavior, loading the CSV, generating cards, opening the modal, and developing the interface. It should not be treated as the final environment for testing mobile sharing to applications such as WhatsApp.</p>
+                <h3>Why We Cannot Fully Test WhatsApp Sharing Locally</h3>
+                <p>Suppose the application is running at:</p>
+                <pre><code>http://localhost:8000</code></pre>
+                <p>This address only exists on the development computer. A phone cannot use that address to access the application in the same way that it can access a public website.</p>
+                <p>More importantly, the browser's security requirements for sharing and other powerful web APIs mean that the final sharing behavior should be tested from the deployed HTTPS version of the application.</p>
+                <p>Therefore, we should not spend time trying to make the local HTTP version behave exactly like the production version for every browser API.</p>
+                <p>Instead, we use the local server for normal development and perform the final sharing test after deploying the application to GitHub Pages.</p>
+                <h3>Local Development and Production Testing</h3>
+                <p>This gives us two different environments with different purposes.</p>
+                <pre><code>Local development
+http://localhost:8000
+        ↓
+Test HTML
+Test CSS
+Test JavaScript
+Test CSV loading
+Test filtering
+Test modal
+Test application behavior
+
+
+GitHub Pages
+https://...
+        ↓
+Test real public URL
+Test PWA behavior
+Test mobile sharing
+Test sharing to apps such as WhatsApp</code></pre>
+                <p>We do not need to wait until deployment to develop the entire application. Almost everything can be built and tested locally.</p>
+                <p>Deployment is simply the final environment check where features that depend on HTTPS and a public web origin can be tested properly.</p>
+                <h3>Why Not Install a Larger Development Server?</h3>
+                <p>There are many development servers available in the web-development ecosystem. We could use Node.js tools, Python web frameworks, IDE extensions, or a full application server.</p>
+                <p>None of that is necessary for this project.</p>
+                <p>Our application consists of static files, so Python's built-in server is enough. The command:</p>
+                <pre><code>python -m http.server</code></pre>
+                <p>gives us everything we need with no additional project configuration.</p>
+                <p>This also fits the philosophy of the project: use the simplest tool that solves the problem.</p>
+                <h3>One Command Gives Us a Web Server</h3>
+                <p>This is one of the convenient parts of Python for web development. A complete static file server is already included with Python.</p>
+                <p>There is no separate server source code that we need to write. We simply tell Python to run its HTTP server module:</p>
+                <pre><code>python -m http.server</code></pre>
+                <p>The <code>-m</code> option tells Python to run a module as a program. In this case, the module is <code>http.server</code>.</p>
+                <p>Python then starts the server and uses the current directory as the document root.</p>
+                <h3>The Server Fits Our Project Architecture</h3>
+                <p>Our architecture is now becoming very straightforward.</p>
+                <pre><code>Python scraper
+        ↓
+data/greetcards.csv
+        ↓
+Static project files
+        ↓
+Python development HTTP server
+        ↓
+Browser
+        ↓
+HTML + CSS + JavaScript
+        ↓
+Greeting-card application</code></pre>
+                <p>The scraper prepares the data, while the HTTP server simply makes the resulting files available to the browser.</p>
+                <p>There is no need to combine these two Python tasks. The scraper is run when we need to collect or refresh the dataset. The HTTP server runs while we are developing and testing the browser application.</p>
+                <h3>A Typical Project Session</h3>
+                <p>A normal development session might therefore look like this.</p>
+                <p>First, if the dataset needs to be refreshed, go into the <code>data</code> directory and run the scraper:</p>
+                <pre><code>cd data
+            python greetcards.py</code></pre>
+                <p>Then return to the project root:</p>
+                <pre><code>cd ..</code></pre>
+                <p>Start the development server:</p>
+                <pre><code>python -m http.server</code></pre>
+                <p>Finally, open:</p>
+                <pre><code>http://localhost:8000</code></pre>
+                <p>From this point onward, development happens in the browser. We edit the HTML, CSS, and JavaScript, save the files, refresh the page, and inspect the result.</p>
+                <h3>Why This Step Is Important</h3>
+                <p>It may seem excessive to start a server for an application that consists of only a few files. In reality, this small step puts our development environment much closer to the environment in which the application will actually run.</p>
+                <p>The browser sees a normal HTTP origin. Relative URLs behave as expected. JavaScript can request the CSV file through HTTP. Static resources can be loaded using the same kind of paths that will later be used on GitHub Pages.</p>
+                <p>Most importantly, we avoid developing against <code>file://</code> and then discovering later that browser security rules behave differently once the application is deployed.</p>
+                <div class="note">
+                    <p><strong>Important:</strong> Use <code>python -m http.server</code> from the project root while developing. Do not open <code>index.html</code> by double-clicking it when you need to test JavaScript <code>fetch()</code> requests. The local server provides the HTTP environment that our application expects.</p>
+                </div>
+                <h3>What We Have Now</h3>
+                <p>Our project now has both a dataset and a proper way to serve the application during development.</p>
+                <p>The scraper creates <code>data/greetcards.csv</code>. The browser application will later use JavaScript to load that file. Python's built-in HTTP server provides the local HTTP environment needed for that request.</p>
+                <p>For local development, we use <code>http://localhost:8000</code>. For the final application, we will deploy the static files to GitHub Pages and use its HTTPS address.</p>
+                <p>The HTTPS deployment will also be important for testing features such as mobile sharing to applications like WhatsApp. We can develop almost everything locally, but the final sharing behavior should be tested from the deployed HTTPS version rather than treating the local development server as the production environment.</p>
+                <p>We now have the basic development environment ready. The next step is to start turning the empty HTML structure into the actual visual interface of the greeting-card application.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="styles.html">← Previous</a>
+                <a href="app.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

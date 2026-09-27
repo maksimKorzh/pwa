@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Application — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 7</div>
+            <h2>Turning the Website into a Mobile Application</h2>
+            <p>At this point, we have a working website that has been designed with mobile screens in mind. It is important to understand that mobile-friendly design and a mobile application are not the same thing. So far, our project is still simply a website. We have optimized its layout for touch screens and narrow displays, but the browser still treats it as an ordinary web page.</p>
+            <p>In this chapter, we will take the next step and turn the website into a Progressive Web App, or PWA. A PWA can still be opened like a normal website, but the browser can also provide an installable, application-like experience. We will add a web app manifest, application icons, and a service worker that can cache the application files.</p>
+            <h3>Testing the Website on a Mobile Device</h3>
+            <p>Before turning the website into a PWA, it is useful to test what we already have on an actual smartphone. A responsive website should be tested on a real mobile screen whenever possible, because a desktop browser window cannot reproduce every detail of a touch device.</p>
+            <p>There is one important requirement when testing the local development version on a smartphone: the computer and smartphone need to be connected to the same local network.</p>
+            <p>Start the development server from the project directory as usual:</p>
+            <pre><code>python -m http.server</code></pre>
+            <p>The computer will normally show an address such as <code>http://localhost:8000</code>. The word <code>localhost</code>, however, means "this device". On the smartphone, <code>localhost</code> would refer to the smartphone itself, not the computer running our server.</p>
+            <p>Instead, we need to use the computer's local network IP address. For example, if the computer has the address <code>192.168.1.25</code>, the smartphone can open:</p>
+            <pre><code>http://192.168.1.25:8000</code></pre>
+            <p>The exact IP address will be different on every network. On Windows, it can be found with:</p>
+            <pre><code>ipconfig</code></pre>
+            <p>Look for the IPv4 address of the network connection being used by the computer.</p>
+            <div class="note">
+                <p>If the smartphone cannot connect, the computer's firewall may be blocking incoming connections to the Python server. The phone and computer must also be connected to the same network, and some public or guest Wi-Fi networks deliberately prevent devices from communicating with each other.</p>
+            </div>
+            <h3>Testing Mobile Layout Without a Smartphone</h3>
+            <p>Fortunately, we do not need a smartphone every time we want to check the mobile layout. Chrome DevTools has a feature that can emulate many common mobile screen sizes directly inside the desktop browser.</p>
+            <p>Open the application in Chrome and open Developer Tools. One way to do this is to press <code>F12</code>. You can also right-click the page and choose <strong>Inspect</strong>.</p>
+            <p>In DevTools, look for the device toolbar button. It is usually represented by an icon showing a phone and tablet. You can also enable the device toolbar with the keyboard shortcut:</p>
+            <pre><code>Ctrl + Shift + M</code></pre>
+            <p>Once enabled, Chrome changes the page into a simulated mobile viewport. A device selector appears at the top of the page, allowing us to choose common devices and screen sizes.</p>
+            <p>This is generally the preferred way to develop the interface because it is fast and convenient. We can change the screen size, rotate the simulated device, inspect elements, and immediately modify our HTML or CSS without repeatedly moving between the computer and a physical phone.</p>
+            <p>However, device emulation is still an approximation. A real smartphone can behave differently because of its operating system, browser version, touch input, screen density, permissions, sharing capabilities, and other device-specific features. It is therefore useful to use DevTools throughout development and perform some final tests on a real phone when one is available.</p>
+            <h3>From Mobile Website to PWA</h3>
+            <p>Our application already has several characteristics that make it suitable for a PWA: it uses a responsive interface, it is served over HTTP during development, and it consists of static HTML, CSS, JavaScript, and data files.</p>
+            <p>To make it installable and give it application-like behavior, we need to provide the browser with some additional information.</p>
+            <p>The first part is the web app manifest.</p>
+            <h3>Adding the PWA Information to index.html</h3>
+            <p>We begin by adding several elements to the <code>&lt;head&gt;</code> section of <code>index.html</code>.</p>
+            <pre><code>&lt;link rel="manifest" href="manifest.json"&gt;
+&lt;meta name="theme-color" content="#ffffff"&gt;
+&lt;meta name="mobile-web-app-capable" content="yes"&gt;
+&lt;meta name="apple-mobile-web-app-capable" content="yes"&gt;
+&lt;meta name="apple-mobile-web-app-status-bar-style" content="default"&gt;</code></pre>
+            <p>The first line tells the browser where our web app manifest is located.</p>
+            <pre><code>&lt;link rel="manifest" href="manifest.json"&gt;</code></pre>
+            <p>The manifest is a separate JSON file that describes the application. It contains information such as its name, icon files, starting URL, colors, orientation, and how the browser should display it when installed.</p>
+            <p>The <code>theme-color</code> value tells the browser which color to use for parts of the browser interface associated with the application.</p>
+            <p>The mobile web app meta tags provide additional information for mobile browsers, including browser-specific behavior related to running the site in an application-like mode.</p>
+            <h3>Creating manifest.json</h3>
+            <p>Next, create a file named <code>manifest.json</code> in the project root, next to <code>index.html</code>.</p>
+            <pre><code>{
+    "name": "Greeting Cards",
+    "short_name": "Greeting Cards",
+    "description": "Greeting cards for every day",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#f3f3f3",
+    "theme_color": "#ffffff",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}</code></pre>
+            <p>The original application uses Russian values in this file. The book shows the translated English version, just as we did with the visible HTML interface. The purpose of the values is the same.</p>
+            <p><code>name</code> is the full application name. It can be displayed when the application is installed.</p>
+            <p><code>short_name</code> is a shorter version of the name that can be used when there is limited space, such as under an application icon.</p>
+            <p><code>description</code> provides a short description of the application.</p>
+            <p><code>start_url</code> tells the browser which URL should be opened when the installed application starts. Here, <code>./</code> means the application's own root location.</p>
+            <p>The <code>display</code> property is particularly important:</p>
+            <pre><code>"display": "standalone"</code></pre>
+            <p>This asks the browser to open the application in an application-like window rather than displaying the normal browser interface around the page.</p>
+            <p><code>background_color</code> defines a background color that can be used while the application is starting. <code>theme_color</code> describes the application's theme color.</p>
+            <p>The <code>orientation</code> property requests portrait orientation. This makes sense for our greeting-card application because the interface was designed primarily for vertical mobile screens.</p>
+            <h3>Application Icons</h3>
+            <p>The manifest also specifies two PNG icons.</p>
+            <pre><code>"icons": [
+    {
+        "src": "icons/icon-192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+    },
+    {
+        "src": "icons/icon-512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+    }
+]</code></pre>
+            <p>These files should be placed in an <code>icons</code> directory:</p>
+            <pre><code>icons/
+    icon-192.png
+    icon-512.png</code></pre>
+            <p>The two sizes give browsers suitable images for different installation and display situations.</p>
+            <h3>Creating the Icons from an SVG</h3>
+            <p>If we do not already have PNG icons, one convenient approach is to find or create an SVG image and convert it into PNG files.</p>
+            <p>SVG stands for Scalable Vector Graphics. Unlike a normal bitmap image, an SVG describes the image using shapes and paths, so it can be resized without the same type of pixelation that can occur with a small raster image.</p>
+            <p>For a simple application icon, we can find an SVG icon from a free icon website or another source that permits its use. Always check the site's license and the license of the individual icon before using it in a published application.</p>
+            <p>After downloading the SVG file, it can be converted to PNG using a free online image-conversion tool. Many websites provide this functionality: upload the SVG, choose PNG as the output format, and select the required dimensions.</p>
+            <p>For our application, create one PNG at <code>192 × 192</code> pixels and another at <code>512 × 512</code> pixels.</p>
+            <p>After downloading the converted files, rename them to:</p>
+            <pre><code>icon-192.png
+icon-512.png</code></pre>
+            <p>Then place both files in the <code>icons</code> directory.</p>
+            <div class="note">
+                <p>When downloading an icon from the internet, "free to download" does not automatically mean "free to use in any project". Check the icon's license before publishing the application.</p>
+            </div>
+            <h3>The Project Structure</h3>
+            <p>After adding the manifest and icons, the project now has a structure similar to this:</p>
+            <pre><code>index.html
+manifest.json
+sw.js
+data/
+    greetcards.py
+    greetcards.csv
+icons/
+    icon-192.png
+    icon-512.png</code></pre>
+            <p>The Python scraper remains a development/build-time tool. The browser does not run <code>greetcards.py</code>. It only loads the generated CSV file.</p>
+            <h3>Adding the Service Worker</h3>
+            <p>The next important PWA component is a service worker. A service worker is a JavaScript file that the browser can run separately from the web page and use to intercept certain network requests.</p>
+            <p>We will create a file named <code>sw.js</code> in the project root.</p>
+            <p>Before the browser can use it, we need to register it from <code>index.html</code>.</p>
+            <pre><code>&lt;script&gt;
+    if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () =&gt; {
+            navigator.serviceWorker.register("./sw.js")
+                .then(() =&gt; console.log("PWA service worker registered"))
+                .catch(error =&gt; console.error("PWA error:", error));
+        });
+    }
+&lt;/script&gt;</code></pre>
+            <p>The first condition checks whether the browser supports service workers.</p>
+            <pre><code>if ("serviceWorker" in navigator)</code></pre>
+            <p>The registration happens after the page has finished loading. The browser is told that the service worker file is <code>sw.js</code>.</p>
+            <p>If registration succeeds, a message is printed to the browser console. If something goes wrong, the error is printed instead.</p>
+            <h3>Creating sw.js</h3>
+            <p>Now create the <code>sw.js</code> file.</p>
+            <pre><code>const CACHE_NAME = "greetcards-v1";
+
+const FILES_TO_CACHE = [
+    "./",
+    "./index.html",
+    "./manifest.json",
+    "./data/greetcards.csv"
+];
+
+self.addEventListener("install", event =&gt; {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache =&gt; {
+            return cache.addAll(FILES_TO_CACHE);
+        })
+    );
+
+    self.skipWaiting();
+});
+
+self.addEventListener("activate", event =&gt; {
+    event.waitUntil(
+        caches.keys().then(keys =&gt; {
+            return Promise.all(
+                keys
+                    .filter(key =&gt; key !== CACHE_NAME)
+                    .map(key =&gt; caches.delete(key))
+            );
+        })
+    );
+
+    self.clients.claim();
+});
+
+self.addEventListener("fetch", event =&gt; {
+    event.respondWith(
+        caches.match(event.request).then(cached =&gt; {
+            return cached || fetch(event.request);
+        })
+    );
+});</code></pre>
+            <h3>Understanding the Cache Name</h3>
+            <p>The first line defines the name of our cache.</p>
+            <pre><code>const CACHE_NAME = "greetcards-v1";</code></pre>
+            <p>The <code>v1</code> is a version number. When we make a future change to the files being cached, we can change this name to something such as <code>greetcards-v2</code>. The service worker can then recognize the new cache as a different version.</p>
+            <h3>Choosing What to Cache</h3>
+            <p>The files we want to cache are listed in <code>FILES_TO_CACHE</code>.</p>
+            <pre><code>const FILES_TO_CACHE = [
+    "./",
+    "./index.html",
+    "./manifest.json",
+    "./data/greetcards.csv"
+];</code></pre>
+            <p>These are the essential files required for the application itself: the page, the manifest, and the greeting-card dataset.</p>
+            <p>Notice what is not included: the greeting-card images.</p>
+            <p>The CSV contains URLs pointing to images hosted elsewhere. Our service worker does not download the entire collection of greeting-card images and put them into our application cache. The browser requests those images from their original online URLs when they are needed.</p>
+            <h3>The Install Event</h3>
+            <p>The service worker receives an <code>install</code> event when the browser installs a new version of the worker.</p>
+            <pre><code>self.addEventListener("install", event =&gt; {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache =&gt; {
+            return cache.addAll(FILES_TO_CACHE);
+        })
+    );
+
+    self.skipWaiting();
+});</code></pre>
+            <p><code>caches.open()</code> opens or creates the named cache. Then <code>cache.addAll()</code> requests every file in our list and stores the successful responses in the cache.</p>
+            <p><code>event.waitUntil()</code> tells the browser that the installation work is still in progress and should not be considered complete until the promise finishes.</p>
+            <p><code>self.skipWaiting()</code> asks the newly installed service worker to move toward activation without unnecessarily waiting for older worker instances to disappear.</p>
+            <h3>The Activate Event</h3>
+            <p>After installation, the service worker can become active.</p>
+            <pre><code>self.addEventListener("activate", event =&gt; {
+    event.waitUntil(
+        caches.keys().then(keys =&gt; {
+            return Promise.all(
+                keys
+                    .filter(key =&gt; key !== CACHE_NAME)
+                    .map(key =&gt; caches.delete(key))
+            );
+        })
+    );
+
+    self.clients.claim();
+});</code></pre>
+            <p>The code obtains the names of all available caches and removes every cache whose name does not match the current <code>CACHE_NAME</code>.</p>
+            <p>This is useful when we update the application from <code>greetcards-v1</code> to <code>greetcards-v2</code>. The old cache can be removed instead of remaining on the user's device forever.</p>
+            <p><code>self.clients.claim()</code> allows the active service worker to take control of pages within its scope without waiting for another navigation.</p>
+            <h3>Intercepting Network Requests</h3>
+            <p>The final part of the service worker handles fetch requests.</p>
+            <pre><code>self.addEventListener("fetch", event =&gt; {
+    event.respondWith(
+        caches.match(event.request).then(cached =&gt; {
+            return cached || fetch(event.request);
+        })
+    );
+});</code></pre>
+            <p>Every time the page makes a request, the service worker can check whether the requested resource is already in the cache.</p>
+            <p>If it finds a cached response, that response is returned.</p>
+            <pre><code>return cached</code></pre>
+            <p>If there is no cached response, the browser performs the normal network request.</p>
+            <pre><code>return cached || fetch(event.request)</code></pre>
+            <p>This creates a simple cache-first strategy for the files handled by the service worker.</p>
+            <h3>What the PWA Adds</h3>
+            <p>We now have several new pieces working together. The manifest tells the browser what the application is called, which icons belong to it, where it starts, and how it should be displayed. The service worker gives the browser a mechanism for caching the application shell and dataset. The registration code connects the service worker to our web page.</p>
+            <p>The result is still the same HTML, CSS, and JavaScript application we built in the previous chapters. We have not replaced the website with a native Android or iOS application. Instead, we have added web platform features that allow the browser to treat the site more like an installed application.</p>
+            <div class="note">
+                <p>The service worker does not magically make every resource offline. In this project, we deliberately cache the application files and CSV dataset, while greeting-card images remain external resources. If an image URL is unavailable, caching the application itself does not guarantee that the image will still be available.</p>
+            </div>
+            <h3>Testing the PWA</h3>
+            <p>Because service workers and installation features are security-sensitive browser APIs, the application should be tested through a proper web origin rather than by opening <code>index.html</code> directly as a <code>file://</code> URL.</p>
+            <p>During development, continue using:</p>
+            <pre><code>python -m http.server</code></pre>
+            <p>Open the application at <code>http://localhost:8000</code> and use Chrome DevTools to inspect the application and service worker status.</p>
+            <p>For final PWA testing, deploy the project to GitHub Pages. GitHub Pages provides an HTTPS web address, which is important for the browser features used by a PWA.</p>
+            <p>Once deployed, test the application on a real smartphone if possible. This allows us to verify not only the responsive layout but also the installation experience, application icon, native sharing behavior, and other mobile-specific browser features.</p>
+            <h3>Website, Mobile Website, and PWA</h3>
+            <p>It is useful to keep the terminology clear. A normal website can be opened in a browser on many devices. A mobile-friendly website is still a website, but its layout and controls are designed to work well on small screens. A PWA adds web platform features such as a manifest, installation-related metadata, and a service worker.</p>
+            <p>Our project started as a normal static website, was designed mobile-first, and is now being extended into a PWA.</p>
+            <p>This separation is useful when developing the application because each stage can be tested independently. First we make the website work. Then we make it comfortable to use on a mobile screen. Finally, we add the PWA features that make it possible to provide a more application-like experience.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="app.html">← Previous</a>
+                <a href="install.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

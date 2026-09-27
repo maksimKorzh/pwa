@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Install & Update — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 8</div>
+            <h2>Installing and Updating the PWA</h2>
+            <p>In the previous chapter, we added the manifest and service worker that turn our mobile-friendly website into a Progressive Web App. The application can now be installed on a mobile device and can use cached application files.</p>
+            <p>This chapter focuses on what happens after the PWA has been created: how to install it on Android and iPhone, and how to deal with updates once the application is installed.</p>
+            <h3>Installing the PWA on Android</h3>
+            <p>Once the application is deployed to a public HTTPS address, an Android browser such as Chrome can offer an installation option when the site meets the browser's PWA requirements.</p>
+            <p>Open the deployed application in Chrome. Depending on the browser version and the state of the application, Chrome may show an install prompt or an option such as <strong>Install app</strong> in the browser menu.</p>
+            <p>Choose the installation option and confirm it. Android then creates an application entry using the name and icon provided by the web app manifest.</p>
+            <p>After installation, the application can be launched from the Android Home Screen or application list. Because the manifest specifies <code>"display": "standalone"</code>, the application can open without the normal browser interface surrounding the page.</p>
+            <div class="note">
+                <p>The exact wording and location of the installation command can vary between Android versions, browsers, and browser updates. If an automatic install prompt is not shown, look in the browser's menu for an installation option.</p>
+            </div>
+            <h3>Installing the PWA on iPhone</h3>
+            <p>On iPhone and iPad, the installation process is handled through Safari. Open the deployed HTTPS application in Safari and use the <strong>Share</strong> button.</p>
+            <p>In the sharing menu, choose <strong>Add to Home Screen</strong>. Confirm the name and add the application to the Home Screen.</p>
+            <p>The new icon can then be opened like other Home Screen applications. The browser uses the web app manifest and the page's PWA configuration to determine how the installed web application should behave.</p>
+            <p>As with Android, the exact interface can change between operating-system and browser versions. The important idea is that installation does not download a traditional native Android or iOS application from an app store. The browser creates a Home Screen application entry for the web application.</p>
+            <h3>Updating an Installed PWA</h3>
+            <p>There is an important difference between developing a normal website and developing an installed PWA: once the service worker starts caching files, refreshing the page is no longer always enough to see every change immediately.</p>
+            <p>For a normal website, we can edit <code>index.html</code>, reload the page, and usually see the new version immediately. With our service worker, some files may instead be returned from the cache.</p>
+            <p>For example, suppose we originally installed version 1 of the application. The service worker cached:</p>
+            <pre><code>index.html
+manifest.json
+data/greetcards.csv</code></pre>
+            <p>Later, we modify <code>index.html</code> and upload the new version to GitHub Pages. If the service worker continues returning the cached copy of <code>index.html</code>, simply reloading the installed application may still show the older version.</p>
+            <p>This is one of the most important things to understand when developing a service-worker-based application: <strong>the installed application has its own cached copy of some resources.</strong></p>
+            <h3>Changing the Cache Version</h3>
+            <p>Our service worker already contains a mechanism for dealing with updated application files. We can change:</p>
+            <pre><code>const CACHE_NAME = "greetcards-v1";</code></pre>
+            <p>to:</p>
+            <pre><code>const CACHE_NAME = "greetcards-v2";</code></pre>
+            <p>When the browser detects the changed service worker, it can install the new worker and create the new cache. During activation, our code deletes caches whose names no longer match the current cache name.</p>
+            <p>This is why the cache version is useful. It gives us a simple way to tell the service worker that the set of application files has changed.</p>
+            <p>For development, however, there can still be situations where an installed application continues using an older service worker or cached resources. When testing updates, it is therefore useful to know how to manually clear the stored application data.</p>
+            <h3>Clearing the PWA Cache</h3>
+            <p>If an installed PWA appears to be stuck on an old version, one troubleshooting method is to clear the site's stored data or cache in the browser settings.</p>
+            <p>The exact steps depend on the operating system and browser, but the general process is to find the application's site data or storage settings and remove the stored data for that website. This can force the browser to obtain the application files again.</p>
+            <p>On a desktop Chrome installation used for development, DevTools also provides tools for inspecting service workers and clearing stored data. Open DevTools and use the <strong>Application</strong> panel. The <strong>Storage</strong> area provides controls for clearing site data, while the <strong>Service Workers</strong> section lets us inspect the registered service worker.</p>
+            <p>After clearing the site's stored data, reopen the application. The browser can then download the current application files and create the cache again.</p>
+            <h3>Reinstalling the Application</h3>
+            <p>Another straightforward solution on a phone is to remove the installed PWA and install it again from the current website.</p>
+            <p>This is especially useful while developing the application because it gives us a clean installation state. The browser no longer has the old installed application's stored data associated with that installation, so the current deployed files can be loaded again.</p>
+            <p>In other words, during development we have three useful update techniques:</p>
+            <pre><code>1. Update the service worker cache version.
+2. Clear the application's stored site data/cache.
+3. Remove and reinstall the PWA.</code></pre>
+            <div class="note">
+                <p>Do not assume that pressing Reload in an installed PWA always means "download every file again". The service worker can intercept requests and return cached responses. This is one of the benefits of a PWA, but it also means that developers need to think about cache updates.</p>
+            </div>
+            <h3>Why Caching Is Useful</h3>
+            <p>It may seem inconvenient that cached files can hide a newly uploaded version, but caching is one of the features that makes a PWA useful.</p>
+            <p>Once essential files are stored locally, the application can sometimes load those files without downloading them again from the server. This can make startup faster and can allow parts of the application to continue working when the network is unavailable.</p>
+            <p>The trade-off is that the browser needs a way to determine when the cached version should be replaced. Our <code>CACHE_NAME</code> versioning system provides a simple solution for this project.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="pwa.html">← Previous</a>
+                <a href="afterword.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

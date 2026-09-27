@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Logic — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 6</div>
+            <h2>Application Logic</h2>
+                <p>So far, we have built the HTML structure, added the visual design with CSS, and set up a local HTTP server for development. The page can now look like an application, but it still does not actually do anything. In this chapter, we will add the JavaScript that turns the static interface into a working greeting-card application.</p>
+                <p>The original application is written in Russian, so the dataset and the search keywords remain Russian. In the book, however, the user-facing interface is translated into English to make the application easier to understand for an international reader. This means that category names shown on the screen can be English while the keywords used to search the Russian dataset remain Russian.</p>
+                <h3>What JavaScript Will Do</h3>
+                <p>Our JavaScript code connects all the parts of the application together. It loads the CSV file, converts its contents into JavaScript objects, removes duplicate cards, creates the category buttons, searches cards by category, chooses random cards, displays cards on the page, opens the card viewer, copies links, opens the device sharing menu, and scrolls the page back to the top.</p>
+                <p>All of this code can live inside the <code>&lt;script&gt;</code> element at the bottom of <code>index.html</code>. This keeps the project simple: HTML, CSS, and JavaScript are all available in one file.</p>
+                <h3>Defining the Categories</h3>
+                <p>We begin with an array containing the categories used by the application. Each category is represented by an object with a name and a list of keywords.</p>
+                <pre><code>const categories = [
+    { name: "Good Morning", keywords: ["утр"] },
+    { name: "Good Night", keywords: ["ноч"] },
+    { name: "I Love You", keywords: ["юблю", "скучаю"] },
+    { name: "For a Friend", keywords: ["одруг", "енщин"] },
+    { name: "Seasons", keywords: ["весна", "лето", "осень", "зима"] },
+    { name: "Happy Birthday", keywords: ["ождения"] },
+    { name: "Happy New Year", keywords: ["овым"] },
+];</code></pre>
+                <p>The <code>name</code> is what the user sees as a category button. The <code>keywords</code> are what the program searches for in the Russian card titles.</p>
+                <p>Notice that the keywords are not translated. For example, the English category name <code>"Good Morning"</code> still uses the Russian keyword <code>"утр"</code>. This is intentional because the dataset itself contains Russian titles. We are translating the interface, not the database.</p>
+                <p>The keywords are also deliberately short fragments rather than complete phrases. For example, <code>"утр"</code> can match Russian words containing that sequence. This makes the category search less dependent on the exact grammatical form used in a card title.</p>
+                <h3>Storing Application State</h3>
+                <p>Next, we create two variables that will hold information while the application is running.</p>
+                <pre><code>let allCards = [];
+let selectedCard = null;</code></pre>
+                <p><code>allCards</code> starts as an empty array. After the CSV is loaded, it will contain all greeting cards available to the application.</p>
+                <p><code>selectedCard</code> stores the card currently displayed in the modal window. It is initially <code>null</code> because no card has been selected yet.</p>
+                <h3>Loading the CSV File</h3>
+                <p>The first major task is loading our dataset. JavaScript provides the <code>fetch()</code> function for requesting files over HTTP.</p>
+                <pre><code>async function loadCSV() {
+    const response = await fetch("data/greetcards.csv");
+    const text = await response.text();
+
+    allCards = text
+        .split("\n")
+        .filter(x => x.trim())
+        .map(line => {
+            const comma = line.indexOf(",");
+
+            return {
+                title: line.slice(0, comma).trim(),
+                url: line.slice(comma + 1).trim()
+            };
+        });
+
+    allCards = [...new Map(
+        allCards.map(card => [card.url, card])
+    ).values()];
+
+    createCategoryButtons();
+    showRandomCards();
+}</code></pre>
+                <p>The function is marked <code>async</code> because loading a file takes time. The <code>await</code> keyword tells JavaScript to wait for the requested operation to finish before continuing.</p>
+                <p>First, <code>fetch("data/greetcards.csv")</code> requests the CSV file. Because our project is being served from the local HTTP server, the browser requests the file relative to the current page.</p>
+                <p>The next line converts the response into plain text. At this point, JavaScript has the complete CSV contents as one large string.</p>
+                <h3>Turning CSV Lines into Objects</h3>
+                <p>We then split the text into separate lines.</p>
+                <pre><code>text.split("\n")</code></pre>
+                <p>Empty lines are removed with <code>filter()</code>.</p>
+                <pre><code>.filter(x => x.trim())</code></pre>
+                <p>Finally, <code>map()</code> converts every CSV line into a JavaScript object containing a title and an image URL.</p>
+                <pre><code>{
+    title: "...",
+    url: "..."
+}</code></pre>
+                <p>The code finds the first comma with <code>indexOf(",")</code>. Everything before that comma becomes the title, while everything after it becomes the image URL.</p>
+                <p>This is a deliberately simple CSV parser because our generated dataset has this very simple structure: one title followed by one URL on each line.</p>
+                <h3>Removing Duplicate Cards</h3>
+                <p>The source data can contain the same image more than once. We do not want duplicate cards in the application, so we remove duplicates based on the image URL.</p>
+                <pre><code>allCards = [...new Map(
+    allCards.map(card => [card.url, card])
+).values()];</code></pre>
+                <p>This is a compact JavaScript technique that uses a <code>Map</code>. A <code>Map</code> stores values using keys. Here, the image URL is used as the key.</p>
+                <p>If the same URL appears more than once, the later entry replaces the previous entry. Calling <code>values()</code> gives us the remaining card objects, and the spread operator <code>...</code> converts them back into an array.</p>
+                <p>The result is that every image URL appears only once in <code>allCards</code>.</p>
+                <h3>Starting the Application</h3>
+                <p>After the CSV has been loaded and cleaned, two functions are called.</p>
+                <pre><code>createCategoryButtons();
+showRandomCards();</code></pre>
+                <p>The first creates the category buttons. The second displays an initial selection of cards so the application is not empty when it opens.</p>
+                <h3>Showing Random Cards</h3>
+                <p>The home view displays one random card for each category.</p>
+                <pre><code>function showRandomCards() {
+    const randomCards = [];
+    const usedUrls = new Set();
+
+    categories.forEach(category => {
+        const matches = allCards.filter(card => {
+            const title = card.title.toLowerCase();
+
+            return category.keywords.some(keyword =>
+                title.includes(keyword.toLowerCase())
+            ) && !usedUrls.has(card.url);
+        });
+
+        if (matches.length &gt; 0) {
+            const randomCard =
+                matches[Math.floor(Math.random() * matches.length)];
+
+            randomCards.push(randomCard);
+            usedUrls.add(randomCard.url);
+        }
+    });
+
+    renderCards(randomCards);
+    scrollToTop();
+}</code></pre>
+                <p>We first create an empty array called <code>randomCards</code>. This will contain the cards that are eventually displayed.</p>
+                <p>We also create a <code>Set</code> called <code>usedUrls</code>. A set is useful when we need to keep track of unique values. Here it prevents the same image from being selected for two different categories.</p>
+                <p>The <code>forEach()</code> method then processes every category.</p>
+                <p>For each category, <code>filter()</code> searches through all available cards. The card title is converted to lowercase so that the search is not affected by capitalization.</p>
+                <pre><code>const title = card.title.toLowerCase();</code></pre>
+                <p>The <code>some()</code> method checks whether at least one keyword occurs in the title.</p>
+                <pre><code>category.keywords.some(keyword =>
+    title.includes(keyword.toLowerCase())
+)</code></pre>
+                <p>The second condition checks that the card has not already been selected.</p>
+                <pre><code>!usedUrls.has(card.url)</code></pre>
+                <p>If matching cards exist, JavaScript chooses one at random.</p>
+                <pre><code>const randomCard = matches[Math.floor(Math.random() * matches.length)];</code></pre>
+                <p>The selected card is added to <code>randomCards</code>, and its URL is added to <code>usedUrls</code> so it cannot be selected again for another category.</p>
+                <p>Finally, the resulting cards are passed to <code>renderCards()</code>, which creates the HTML elements that the user sees.</p>
+                <h3>Creating the Category Buttons</h3>
+                <p>The category buttons are created dynamically with JavaScript instead of writing every button manually in HTML.</p>
+                <pre><code>function createCategoryButtons() {
+    const container = document.getElementById("categories");
+
+    categories.forEach(cat => {
+        const btn = document.createElement("button");
+
+        btn.className = "category-btn";
+        btn.innerText = cat.name;
+
+        btn.onclick = () => {
+            showCategory(cat);
+            scrollToTop();
+        };
+
+        container.appendChild(btn);
+    });
+}</code></pre>
+                <p><code>document.getElementById("categories")</code> finds the HTML element that will contain the buttons.</p>
+                <p>For every category, <code>document.createElement("button")</code> creates a new button element.</p>
+                <p>We then assign the CSS class and the text displayed on the button.</p>
+                <pre><code>btn.className = "category-btn";
+btn.innerText = cat.name;</code></pre>
+                <p>The important part is the <code>onclick</code> handler. When the user taps a category button, the application calls <code>showCategory(cat)</code>.</p>
+                <p>Finally, <code>appendChild()</code> inserts the newly created button into the categories container.</p>
+                <h3>Searching a Category</h3>
+                <p>The <code>showCategory()</code> function performs the actual category search.</p>
+                <pre><code>function showCategory(category) {
+    let found = allCards.filter(card => {
+        const title = card.title.toLowerCase();
+
+        return category.keywords.some(keyword =>
+            title.includes(keyword.toLowerCase())
+        );
+    });
+
+    found = shuffle(found).slice(0, 10);
+
+    renderCards(found);
+    scrollToTop();
+}</code></pre>
+                <p>The search works in much the same way as the random home view. We check every card and keep the cards whose titles contain at least one of the category's Russian keywords.</p>
+                <p>After finding the matches, we shuffle them and keep only the first ten.</p>
+                <pre><code>found = shuffle(found).slice(0, 10);</code></pre>
+                <p>This gives the user a maximum of ten randomly ordered cards whenever a category is selected.</p>
+                <h3>Rendering Cards on the Page</h3>
+                <p>Finding cards is not enough. We need to turn the JavaScript objects into actual HTML elements.</p>
+                <pre><code>function renderCards(cards) {
+    const container = document.getElementById("cards");
+    container.innerHTML = "";
+
+    cards.forEach(card => {
+        const div = document.createElement("div");
+        div.className = "card";
+
+        div.innerHTML = `
+            &lt;img loading="lazy" src="${card.url}"&gt;
+            &lt;div class="card-title"&gt;
+                ${card.title}
+            &lt;/div&gt;
+        `;
+
+        div.onclick = () => openModal(card);
+        container.appendChild(div);
+    });
+}</code></pre>
+                <p>First, we find the cards container and clear its previous contents.</p>
+                <pre><code>container.innerHTML = "";</code></pre>
+                <p>This is important because changing categories should replace the old cards rather than append new cards underneath them.</p>
+                <p>For every card, we create a new <code>div</code>, give it the <code>card</code> class, and build its contents with a template literal.</p>
+                <p>The image uses <code>loading="lazy"</code>. This tells the browser that images can be loaded as they become necessary instead of immediately loading every image at once.</p>
+                <p>The card also receives a click handler:</p>
+                <pre><code>div.onclick = () => openModal(card);</code></pre>
+                <p>Clicking or tapping the card therefore opens the modal containing the selected greeting card.</p>
+                <h3>Shuffling the Results</h3>
+                <p>The application uses a small helper function to create a new randomly ordered array.</p>
+                <pre><code>function shuffle(arr) {
+    return [...arr].sort(() => Math.random() - 0.5);
+}</code></pre>
+                <p>The spread operator creates a copy of the original array, so the original array is not modified directly.</p>
+                <p>The <code>sort()</code> callback uses <code>Math.random()</code> to change the order of the elements. For this application, the simple approach is sufficient because we only need a varied selection of greeting cards rather than a cryptographically secure randomization algorithm.</p>
+                <h3>Opening the Modal</h3>
+                <p>When a card is clicked, the application opens the modal viewer.</p>
+                <pre><code>function openModal(card) {
+    selectedCard = card;
+
+    document.getElementById("modalImg").src = card.url;
+
+    document.getElementById("modal")
+        .classList.remove("hidden");
+}</code></pre>
+                <p>The selected card is saved in <code>selectedCard</code>. This is important because the Share and Copy buttons need to know which card the user is currently viewing.</p>
+                <p>Next, the image URL is assigned to the modal image element. Finally, the <code>hidden</code> CSS class is removed, making the modal visible.</p>
+                <h3>Closing the Modal</h3>
+                <p>The Close button simply adds the <code>hidden</code> class back to the modal.</p>
+                <pre><code>document.getElementById("closeBtn").onclick = () => {
+    document.getElementById("modal").classList.add("hidden");
+};</code></pre>
+                <p>This is a good example of how CSS and JavaScript work together. CSS defines what the <code>hidden</code> class means, while JavaScript decides when that class should be added or removed.</p>
+                <h3>Copying the Card Link</h3>
+                <p>The Copy Link button needs to work in more than one browser environment. Modern browsers provide the Clipboard API, but it is subject to security requirements.</p>
+                <pre><code>document.getElementById("copyBtn").onclick = async () => {
+    try {
+        if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+            await navigator.clipboard.writeText(selectedCard.url);
+            alert("Link copied");
+            return;
+        }
+
+        const textarea = document.createElement("textarea");
+        textarea.value = selectedCard.url;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        const success = document.execCommand("copy");
+
+        document.body.removeChild(textarea);
+
+        if (success) {
+            alert("Link copied");
+        } else {
+            alert("Could not copy the link");
+        }
+    } catch (error) {
+        console.error("Copy error:", error);
+        alert("Could not copy the link");
+    }
+};</code></pre>
+                <p>The first attempt uses <code>navigator.clipboard.writeText()</code>. The code checks both that the Clipboard API exists and that the page is running in a secure context.</p>
+                <p>If that modern method is not available, the code creates a temporary invisible <code>textarea</code>, selects its contents, and uses <code>document.execCommand("copy")</code> as a fallback.</p>
+                <p>The <code>try...catch</code> structure prevents an unexpected browser error from stopping the rest of the application.</p>
+                <div class="note">
+                    <p>Clipboard and sharing features are affected by browser security rules. This is one of the reasons the application should be tested through the development HTTP server instead of opening <code>index.html</code> directly with a <code>file://</code> URL. Final sharing tests should be performed after deploying the application to GitHub Pages over HTTPS.</p>
+                </div>
+                <h3>The More Cards Button</h3>
+                <p>The main random button is connected to the same <code>showRandomCards()</code> function used when the application first loads.</p>
+                <pre><code>document.getElementById("randomBtn").onclick = () => {
+    showRandomCards();
+    scrollToTop();
+};</code></pre>
+                <p>Every time the user presses the button, the application creates another random selection.</p>
+                <h3>Sharing a Card</h3>
+                <p>The Share button uses the browser's Web Share API when it is available.</p>
+                <pre><code>document.getElementById("shareBtn").onclick = async () => {
+    try {
+        if (navigator.share) {
+            await navigator.share({
+                title: selectedCard.title,
+                url: selectedCard.url
+            });
+            return;
+        }
+
+        await navigator.clipboard.writeText(selectedCard.url);
+        alert("Link copied");
+    } catch (error) {
+        console.error("Share error:", error);
+
+        if (error.name === "AbortError") {
+            return;
+        }
+
+        alert("Could not open the sharing menu");
+    }
+};</code></pre>
+                <p>If <code>navigator.share</code> exists, the browser opens its native sharing interface. On a mobile device, this can allow the user to choose an application such as WhatsApp or another installed messenger.</p>
+                <p>If Web Share is not available, the code falls back to copying the URL to the clipboard.</p>
+                <p>The <code>AbortError</code> check is useful because a user can open the sharing menu and then cancel it. Cancelling the share is not really an application error, so we simply return without showing an error message.</p>
+                <h3>Scrolling Back to the Top</h3>
+                <p>After changing the displayed cards, the application scrolls back to the beginning of the page.</p>
+                <pre><code>function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+}</code></pre>
+                <p><code>window.scrollTo()</code> changes the page scroll position. Setting <code>top</code> to <code>0</code> means the top of the page, while <code>behavior: "smooth"</code> makes the movement animated instead of instant.</p>
+                <h3>Starting the Application</h3>
+                <p>At the very end of the script, we call the function that loads the dataset.</p>
+                <pre><code>loadCSV();</code></pre>
+                <p>This single call starts the application's JavaScript flow. The browser loads the CSV, converts it into objects, removes duplicates, creates the category buttons, and displays the initial cards.</p>
+                <p>The overall flow can now be summarized as:</p>
+                <pre><code>loadCSV()
+    ↓
+fetch CSV
+    ↓
+convert CSV to JavaScript objects
+    ↓
+remove duplicate URLs
+    ↓
+create category buttons
+    ↓
+show random cards
+    ↓
+render cards
+    ↓
+user interacts with the application
+    ↓
+search / random / modal / copy / share</code></pre>
+                <h3>How the Pieces Work Together</h3>
+                <p>At this point, the application has a complete client-side data flow. The Python scraper created the dataset before the application runs. The CSV file provides the data. JavaScript loads and processes that data in the browser. HTML provides the elements that JavaScript manipulates, and CSS controls how those elements look.</p>
+                <p>There is no database and no application backend. The browser performs the searching, filtering, random selection, rendering, copying, and sharing itself.</p>
+                <p>This architecture is intentionally simple. The greeting-card images are not downloaded by the JavaScript application and stored on our server. The CSV contains their online URLs, and the browser loads the images from those URLs when they are displayed.</p>
+                <h3>One Important Limitation of the CSV Parser</h3>
+                <p>Our CSV parser is intentionally minimal. It assumes that the first comma separates the title from the URL. A more general CSV parser would need to correctly handle quoted fields, commas inside text, escaped quotes, and other CSV rules.</p>
+                <p>For this project, the dataset generated by our scraper follows a simple predictable format, so a small parser keeps the application easier to understand.</p>
+                <h3>The Application Is Now Interactive</h3>
+                <p>With this JavaScript in place, the interface is no longer just a collection of HTML elements. The category buttons are generated from data, the CSV becomes usable application data, cards are searched and randomized, and the modal can display a selected card.</p>
+                <p>We also have browser integration for copying links and sharing them through the device's native sharing interface where supported.</p>
+                <p>The important idea is that JavaScript is acting as the connection between the data and the interface. It reads the dataset, makes decisions about which cards to show, and updates the HTML whenever the user interacts with the application.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="server.html">← Previous</a>
+                <a href="pwa.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Interface — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 3</div>
+            <h2>User Interface</h2>
+            <h3>Building the Interface Skeleton</h3>
+            <p class="lead">Before we write any application logic, we need to decide what the user interface is going to look like. In our project, the interface is deliberately simple. We need a way to display categories, a way to request more cards, an area for the greeting cards themselves, and a simple window for viewing and sharing a selected card.</p>
+            <p>The HTML we are starting with is the actual skeleton of the application. At this stage, the CSS and JavaScript are intentionally empty. We will add the visual design and functionality later, but the complete structure of the interface can already be seen in the HTML.</p>
+            <p>This is an important way of thinking about web development. We do not have to build everything at once. First, we can describe the structure of the application using HTML. Then CSS can make that structure look good, and JavaScript can make it interactive.</p>
+            <div class="note">
+                <div class="note-title">HTML Is the Skeleton</div>
+                <p>HTML defines what exists in the application. CSS will control how those elements look, while JavaScript will control what they do.</p>
+            </div>
+            <h3>The Complete HTML</h3>
+            <p>Here is the complete HTML extracted from our project at this stage. The original application is written in Russian, but the version used in this book is translated into English. The structure is the same; only the user-facing text has been translated.</p>
+            <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+        &lt;title&gt;Greeting Cards&lt;/title&gt;
+        &lt;style&gt;&lt;/style&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div class="sticky-controls"&gt;
+            &lt;button id="randomBtn"&gt; 🎲 More Cards&lt;/button&gt;
+            &lt;section id="categories"&gt;&lt;/section&gt;
+        &lt;/div&gt;
+        &lt;section id="cards"&gt;&lt;/section&gt;
+        &lt;div id="modal" class="hidden"&gt;
+            &lt;div class="modal-content"&gt;
+                &lt;img id="modalImg"&gt;
+                &lt;button id="shareBtn"&gt;Share&lt;/button&gt;
+                &lt;button id="copyBtn"&gt;Copy Link&lt;/button&gt;
+                &lt;button id="closeBtn"&gt;Close&lt;/button&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;script&gt;&lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            <p>There is not much code here, and that is intentional. The application does not need a complicated interface. In fact, one of the interesting things about this project is how much functionality we can eventually get from such a small HTML structure.</p>
+            <h3>The Document Type</h3>
+            <p>The first line tells the browser that this is an HTML5 document:</p>
+            <pre><code>&lt;!DOCTYPE html&gt;</code></pre>
+            <p>This declaration is standard for modern HTML documents. It tells the browser to interpret the page using modern HTML standards rather than an older compatibility mode.</p>
+            <p>There is nothing application-specific about this line, but every normal HTML page should have it.</p>
+            <h3>The HTML Element</h3>
+            <p>The root of the entire document is the <code>&lt;html&gt;</code> element:</p>
+            <pre><code>&lt;html lang="en"&gt;</code></pre>
+            <p>Everything else in the document is contained inside this element.</p>
+            <p>The <code>lang</code> attribute tells the browser that the primary language of the document is English in the translated version used in this book. The original application uses <code>lang="ru"</code> because its interface is Russian.</p>
+            <p>This is useful for browsers, search engines, accessibility software, and screen readers.</p>
+            <p>The application itself is not tied to a particular language. We are using English here so that the book is easier to follow, while the original application remains Russian.</p>
+            <h3>The Head</h3>
+            <p>The <code>&lt;head&gt;</code> contains information about the document that is not normally displayed as part of the main page content.</p>
+            <p>Our head contains the character encoding, viewport configuration, page title, PWA manifest, theme information, mobile-related metadata, and an empty style element where our CSS will eventually go.</p>
+            <p>It is worth looking at these pieces individually because several of them are particularly important for a PWA.</p>
+            <h3>Character Encoding</h3>
+            <p>First we specify UTF-8:</p>
+            <pre><code>&lt;meta charset="UTF-8"&gt;</code></pre>
+            <p>UTF-8 allows the document to contain a very large range of characters and is the standard encoding we want to use for a modern web application.</p>
+            <p>This is particularly relevant to our project because the original application contains Russian text. The English version in this book uses translated interface text, but the underlying dataset remains Russian.</p>
+            <p>For example, the original application can write Russian button text directly in the HTML:</p>
+            <pre><code>&lt;button&gt;Поделиться&lt;/button&gt;</code></pre>
+            <p>In the translated version used in the book, the same button is displayed as:</p>
+            <pre><code>&lt;button&gt;Share&lt;/button&gt;</code></pre>
+            <p>We do not need to convert either language into special character codes.</p>
+            <h3>The Mobile Viewport</h3>
+            <p>The next line is extremely important for our mobile-first application:</p>
+            <pre><code>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</code></pre>
+            <p>The viewport is the visible area of the web page inside the browser. On a phone, we want our layout to use the actual width of the device screen.</p>
+            <p>The <code>width=device-width</code> part tells the browser to use the device's width as the width of the page.</p>
+            <p>The <code>initial-scale=1.0</code> part tells the browser to display the page at its normal initial scale rather than starting with an unexpected zoom level.</p>
+            <p>Without this declaration, a mobile browser may use a wider virtual layout and then scale the result down. That can make a page designed for mobile behave in unexpected ways.</p>
+            <div class="note">
+                <div class="note-title">Mobile First</div>
+                <p>The viewport meta tag is one of the foundations of a mobile-friendly web application. It tells the browser that our layout should work with the actual dimensions of the user's device.</p>
+            </div>
+            <h3>The Page Title</h3>
+            <p>The title of our translated application is defined with:</p>
+            <pre><code>&lt;title&gt;Greeting Cards&lt;/title&gt;</code></pre>
+            <p>This title can appear in browser tabs, bookmarks, browser history, and other places where the browser identifies the current page.</p>
+            <p>The original application uses the Russian title <strong>Открытки</strong>, which means greeting cards. We use <strong>Greeting Cards</strong> in the translated version of the book.</p>
+            <h3>The Style Placeholder</h3>
+            <p>At the end of the head we have an empty <code>&lt;style&gt;</code> element:</p>
+            <pre><code>&lt;style&gt;&lt;/style&gt;</code></pre>
+            <p>For now, it contains nothing.</p>
+            <p>Later, this is where we will place the CSS that controls the entire appearance of the application. We will define the background, buttons, card layout, spacing, modal window, typography, and mobile behavior here.</p>
+            <p>Keeping the style element in the document from the beginning also reinforces our single-file approach. We do not need a separate stylesheet for this small project.</p>
+            <h3>The Body</h3>
+            <p>Everything the user actually interacts with belongs inside the <code>&lt;body&gt;</code>.</p>
+            <p>Our body contains three main parts:</p>
+            <ul>
+                <li>The controls and category area.</li>
+                <li>The greeting-card area.</li>
+                <li>The modal window used for a selected card.</li>
+            </ul>
+            <p>These three parts correspond directly to the main things the user can do in our application.</p>
+            <h3>The Sticky Controls</h3>
+            <p>The first element in the body is:</p>
+            <pre><code>&lt;div class="sticky-controls"&gt;
+    ...
+&lt;/div&gt;</code></pre>
+            <p>The name <code>sticky-controls</code> describes the role we want this element to have. Later, CSS will make this section remain visible near the top of the screen while the user scrolls through greeting cards.</p>
+            <p>This is particularly useful on a phone. Imagine that the user has scrolled through ten greeting cards and suddenly wants to select another category. We do not want the user to scroll all the way back to the top just to find the category controls.</p>
+            <p>The HTML itself does not make the element sticky. The class simply gives us a convenient hook that CSS can use later.</p>
+            <h3>The Random Button</h3>
+            <p>Inside the controls we have our first button:</p>
+            <pre><code>&lt;button id="randomBtn"&gt; 🎲 More Cards&lt;/button&gt;</code></pre>
+            <p>The button is intended to show another selection of greeting cards.</p>
+            <p>The visible text is written directly inside the button. We also use a dice emoji to make the purpose of the button immediately recognizable.</p>
+            <p>More importantly, the button has an <code>id</code>:</p>
+            <pre><code>id="randomBtn"</code></pre>
+            <p>This ID gives JavaScript a precise way to find the button later.</p>
+            <p>For example, JavaScript will eventually be able to do something like:</p>
+            <pre><code>document.getElementById("randomBtn")</code></pre>
+            <p>We are not writing that JavaScript yet. We are simply preparing the HTML so that the JavaScript will have something to connect to.</p>
+            <h3>The Categories Section</h3>
+            <p>Immediately below the random button is an empty section:</p>
+            <pre><code>&lt;section id="categories"&gt;&lt;/section&gt;</code></pre>
+            <p>This element is intentionally empty.</p>
+            <p>Why would we create an empty element?</p>
+            <p>Because the category buttons will be generated dynamically by JavaScript.</p>
+            <p>We do not want to manually write every category into the HTML. Instead, JavaScript will eventually have a list of categories and create the appropriate buttons automatically.</p>
+            <p>The empty section gives JavaScript a destination where those buttons can be inserted.</p>
+            <div class="note">
+                <div class="note-title">Empty Elements Can Be Useful</div>
+                <p>An empty HTML element is not necessarily unfinished HTML. It can be a deliberate container for content that will be generated dynamically by JavaScript.</p>
+            </div>
+            <h3>The Cards Section</h3>
+            <p>After the controls we have another empty section:</p>
+            <pre><code>&lt;section id="cards"&gt;&lt;/section&gt;</code></pre>
+            <p>This is the most important content container in the application.</p>
+            <p>It will eventually contain the greeting cards selected by the application.</p>
+            <p>Just like the categories section, it starts empty because we do not know in advance which cards the user will request. JavaScript will read the CSV dataset, search it, select the appropriate cards, and dynamically create the HTML needed to display them.</p>
+            <p>This means that the initial HTML does not need to contain hundreds or thousands of card elements.</p>
+            <p>Instead, we have a single container and let the application populate it when necessary.</p>
+            <h3>Why Generate Cards Dynamically?</h3>
+            <p>There is a major advantage to this approach.</p>
+            <p>Our greeting-card dataset can contain a large number of records, but the user only needs to see a small selection at any particular moment.</p>
+            <p>Loading every card into the HTML would make the document unnecessarily large and would make the page more difficult to manage.</p>
+            <p>Instead, the CSV becomes our data source and JavaScript decides what should currently be displayed.</p>
+            <p>The HTML therefore remains small regardless of how many greeting cards eventually exist in the dataset.</p>
+            <h3>The Modal Window</h3>
+            <p>The final major part of our interface is the modal:</p>
+            <pre><code>&lt;div id="modal" class="hidden"&gt;
+    &lt;div class="modal-content"&gt;
+        ...
+    &lt;/div&gt;
+&lt;/div&gt;</code></pre>
+            <p>A modal is an interface element that appears above the main page content and temporarily focuses the user's attention on a particular task.</p>
+            <p>In our application, the task is viewing and sharing a selected greeting card.</p>
+            <p>The modal has two important classes and IDs. The outer element has the ID <code>modal</code> and the class <code>hidden</code>. The inner element has the class <code>modal-content</code>.</p>
+            <p>The <code>hidden</code> class will initially make the modal invisible. Later, JavaScript will remove that class when the user selects a card.</p>
+            <h3>The Modal Image</h3>
+            <p>Inside the modal we have an image element:</p>
+            <pre><code>&lt;img id="modalImg"&gt;</code></pre>
+            <p>Notice that there is no <code>src</code> attribute yet.</p>
+            <p>This is intentional because the application does not know which greeting card the user will select.</p>
+            <p>When the user clicks a card, JavaScript will take that card's image URL and assign it to the <code>src</code> property of this image.</p>
+            <p>The same modal can therefore be reused for every card in the application.</p>
+            <h3>The Share Button</h3>
+            <p>The first action button inside the modal is:</p>
+            <pre><code>&lt;button id="shareBtn"&gt;Share&lt;/button&gt;</code></pre>
+            <p>The purpose is straightforward: allow the user to share the selected greeting card using the sharing capabilities provided by the device and browser.</p>
+            <p>Again, the important detail at this stage is the ID:</p>
+            <pre><code>id="shareBtn"</code></pre>
+            <p>Later, JavaScript will use this ID to attach the sharing behavior to the button.</p>
+            <h3>The Copy Button</h3>
+            <p>The second action is:</p>
+            <pre><code>&lt;button id="copyBtn"&gt;Copy Link&lt;/button&gt;</code></pre>
+            <p>This gives the user another way to use the selected card. Instead of opening the system sharing interface, the user can copy the image URL to the clipboard.</p>
+            <p>This is useful because not every browser or device provides exactly the same sharing capabilities. Having both sharing and copying gives the user another simple way to send the card to someone.</p>
+            <h3>The Close Button</h3>
+            <p>Finally, the modal contains:</p>
+            <pre><code>&lt;button id="closeBtn"&gt;Close&lt;/button&gt;</code></pre>
+            <p>This button will close the modal and return the user to the card list.</p>
+            <p>Like the other buttons, its ID gives JavaScript a way to attach the required behavior later.</p>
+            <h3>The Script Placeholder</h3>
+            <p>At the bottom of the body we have another empty element:</p>
+            <pre><code>&lt;script&gt;&lt;/script&gt;</code></pre>
+            <p>This is where our JavaScript will eventually live.</p>
+            <p>Putting the script at the end of the body is convenient for this small application because the HTML elements already exist in the document when the JavaScript is executed.</p>
+            <p>We will eventually use this script to load the CSV file, create category buttons, filter cards, display random cards, open and close the modal, and implement sharing and clipboard functionality.</p>
+            <h3>One HTML File</h3>
+            <p>At this point, it is worth stepping back and looking at what we have created.</p>
+            <p>We have not installed a framework. We have not created a React project. We have not added a build system. We have not created a backend. We have not even written any CSS or JavaScript yet.</p>
+            <p>We have simply created one HTML file containing the complete interface structure.</p>
+            <p>This is one of the reasons I like building small PWAs this way. There is very little hidden machinery. If you open <code>index.html</code>, you can see the application.</p>
+            <p>The essential structure is all there: the page metadata, controls, categories, cards, modal, and placeholders for CSS and JavaScript.</p>
+            <h3>Classes and IDs</h3>
+            <p>You may have noticed that the HTML uses both <code>class</code> and <code>id</code> attributes.</p>
+            <p>They serve different purposes in our project.</p>
+            <p>Classes are primarily useful for describing groups of elements and applying common CSS rules. For example, <code>modal-content</code> describes the visual container inside our modal.</p>
+            <p>IDs identify individual elements that JavaScript needs to access directly. For example, <code>randomBtn</code> identifies the random-card button, while <code>modalImg</code> identifies the image displayed inside the modal.</p>
+            <p>This separation is not an absolute rule — CSS can use IDs and JavaScript can work with classes — but using meaningful classes for styling and unique IDs for important application elements makes the code easier to understand.</p>
+            <div class="note">
+                <div class="note-title">HTML as an API for Our JavaScript</div>
+                <p>The IDs and classes we define now become connection points for the code we will write later. The HTML provides the structure, while JavaScript will use those named elements to control the application.</p>
+            </div>
+            <h3>The Interface We Need</h3>
+            <p>Our entire application can therefore be reduced to a surprisingly small collection of interface elements.</p>
+            <ul>
+                <li>A top control area that remains available while browsing.</li>
+                <li>A button for requesting another selection of cards.</li>
+                <li>A dynamically generated list of categories.</li>
+                <li>A dynamically generated list of greeting cards.</li>
+                <li>A modal for viewing a selected card.</li>
+                <li>A sharing button.</li>
+                <li>A copy-link button.</li>
+                <li>A close button.</li>
+            </ul>
+            <p>That is essentially the whole user interface.</p>
+            <p>The interesting part is what happens next. None of these elements knows where the greeting cards come from yet. The categories do not exist yet. The cards do not exist yet. The modal does not know which image to display.</p>
+            <p>All of that information will come from the application logic.</p>
+            <h3>From Static HTML to an Application</h3>
+            <p>Our current HTML is therefore not the finished application. It is the foundation on which the application will be built.</p>
+            <p>CSS will transform the basic elements into a mobile-friendly interface. We will create the sticky controls, category buttons, card layout, modal, spacing, typography, and visual appearance.</p>
+            <p>JavaScript will then bring the interface to life. It will load our CSV dataset, search the data, generate the appropriate HTML, respond to button clicks, open the selected card, and provide sharing and clipboard functionality.</p>
+            <p>But the important thing is that we already know what the final application needs to contain.</p>
+            <p>We are not going to keep adding random interface elements as we develop. The skeleton gives us a clear structure from the beginning.</p>
+            <p>This is also what makes the single-file approach practical. The entire user interface can remain in one place, the CSS can remain in the same document, and the JavaScript can remain there as well. The result is a small and portable application that can be opened, understood, copied, and modified without first learning a complicated project structure.</p>
+            <h3>The Complete Loop</h3>
+            <div class="note">
+                <div class="note-title">The Complete Interface Loop</div>
+                <p>HTML creates the interface skeleton → CSS makes it look like an application → JavaScript loads the data → JavaScript fills the categories and cards → user selects a card → modal displays the card → user shares or copies it → modal closes → user continues browsing.</p>
+            </div>
+            <p>That is the basic architecture of our user interface. The rest of the project is about filling in these placeholders one by one without making the underlying structure unnecessarily complicated.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="data.html">← Previous</a>
+                <a href="styles.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

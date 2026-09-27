@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collecting Data — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 2</div>
+            <h2>Collecting the Greeting Cards Dataset</h2>
+            <p>Before we can build an application that displays greeting cards, we need something for the application to display. The interface we will build later is only one part of the project. The other important part is the dataset containing the greeting-card titles and image URLs.</p>
+            <p>Instead of manually collecting hundreds or thousands of greeting cards, we are going to create a small Python web-scraping script. The script visits the greeting-card website <code>https://otkrytki.top/</code>, discovers its categories and pages, extracts the greeting-card information, and saves everything into a CSV file.</p>
+            <p>The original website and the dataset are in Russian. The application that we build in the book will have an English user interface, but the collected dataset remains Russian. This distinction is important because the application will later search the Russian titles using Russian keywords, even though the category names displayed to the user will be translated into English.</p>
+            <h3>The Project Structure</h3>
+            <p>We are going to keep the scraping code and the resulting dataset inside a <code>data</code> directory. At this stage, our project has a very small structure:</p>
+            <pre><code>index.html
+data/
+    greetcards.py
+    greetcards.csv</code></pre>
+            <p>The <code>index.html</code> file will eventually become the main application. The <code>data/greetcards.py</code> file is our scraper. It is responsible for collecting the data. The <code>data/greetcards.csv</code> file is the resulting dataset that the browser application will later load.</p>
+            <p>This separation is useful because the scraper and the application have different jobs. Python runs during the data-collection stage, while HTML, CSS, and JavaScript run in the browser when the user opens the application.</p>
+            <h3>What Are We Scraping?</h3>
+            <p>Web scraping means automatically reading information from a web page instead of manually copying it. A normal user opens a website in a browser and looks at the page visually. A scraper requests the same HTML document and searches that document for the pieces of information we need.</p>
+            <p>For this project, we do not need to understand every part of the target website. We only need to find the pieces of information that describe a greeting card.</p>
+            <p>For each card, our dataset needs two values:</p>
+            <ul>
+                <li><strong>title</strong> — the Russian title or description associated with the greeting card.</li>
+                <li><strong>url</strong> — the URL of the greeting-card image.</li>
+            </ul>
+            <p>That is enough for our application. Later, JavaScript can search the titles for category keywords and display the corresponding image URLs.</p>
+            <h3>Why Use a CSV File?</h3>
+            <p>CSV stands for Comma-Separated Values. It is a very simple text-based format for storing tabular data.</p>
+            <p>For our project, each row represents one greeting card. Conceptually, the file looks like this:</p>
+            <pre><code>title,url
+доброе утро,https://example.com/image1.jpg
+с добрым утром,https://example.com/image2.jpg
+счастливого понедельника,https://example.com/image3.jpg</code></pre>
+            <p>The actual dataset will contain Russian titles and the real image URLs collected by the scraper.</p>
+            <p>CSV is particularly convenient for this project because we do not need a database server. The browser can request one static file, read its contents, and build the interface from it. This keeps the final application extremely simple.</p>
+            <h3>Python Packages</h3>
+            <p>The scraper uses several Python packages and standard-library modules:</p>
+            <pre><code>import requests
+from bs4 import BeautifulSoup
+import time
+import json
+import csv
+import os</code></pre>
+            <p>The <code>requests</code> package is used to download HTML pages from the website.</p>
+            <p><code>BeautifulSoup</code>, from the <code>bs4</code> package, is used to parse the downloaded HTML and search for the elements containing the information we need.</p>
+            <p>The <code>time</code> module lets us pause between requests. This is important because the scraper should not immediately send hundreds of requests to the website one after another.</p>
+            <p>The <code>json</code> module is imported in the original script but is not actually used by the current implementation. It can therefore be removed, but we will leave the original code intact while explaining it.</p>
+            <p>The <code>csv</code> module writes the collected information into <code>greetcards.csv</code>.</p>
+            <p>The <code>os</code> module is used by the debug mode to check whether a previously downloaded HTML file exists.</p>
+            <h3>Installing the Packages</h3>
+            <p>Before running the scraper, Python needs the external packages <code>requests</code> and <code>beautifulsoup4</code>. The <code>lxml</code> parser used later by BeautifulSoup also needs to be installed.</p>
+            <pre><code>pip install requests beautifulsoup4 lxml</code></pre>
+            <p>The other modules in the script, such as <code>time</code>, <code>csv</code>, and <code>os</code>, are part of Python's standard library and do not need separate installation.</p>
+            <h3>The Script Header</h3>
+            <pre><code>####################################
+#
+#    Script to scrape greetcards
+#    from  https://otkrytki.top/
+#
+####################################</code></pre>
+            <p>The first part is simply a comment. Python ignores everything beginning with <code>#</code>. It does not affect the scraper's behavior.</p>
+            <p>It is useful documentation, however. When we return to the project later, we immediately know what the script does and which website it was designed to collect data from.</p>
+            <h3>Debug Mode</h3>
+            <pre><code>DEBUG = False</code></pre>
+            <p>The script contains a debug mode. When <code>DEBUG</code> is <code>False</code>, the scraper downloads pages directly from the website.</p>
+            <p>When <code>DEBUG</code> is changed to <code>True</code>, the scraper can reuse previously saved HTML files instead of downloading the same pages again.</p>
+            <p>This is extremely useful while developing a scraper. HTML parsing is often the part that requires the most experimentation. If we already have a copy of the page saved locally, we can repeatedly modify the parsing code without repeatedly requesting the website.</p>
+            <h3>The User-Agent</h3>
+            <pre><code>USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"</code></pre>
+            <p>When a normal browser requests a web page, it sends HTTP headers that provide information about the client. One of those headers is commonly called the <code>User-Agent</code>.</p>
+            <p>Our script sends a browser-like User-Agent when making requests. The value above identifies the client as a Chrome-like browser running on Windows.</p>
+            <p>The important part for this project is that the request is made with a recognizable HTTP User-Agent rather than relying on the default User-Agent of the Python requests library.</p>
+            <h3>The Fetch Function</h3>
+            <p>The most reusable part of the scraper is the <code>fetch()</code> function:</p>
+            <pre><code>def fetch(url, filename):
+    # Try extract data
+    try:
+        # Response holder
+        response = None
+
+        # Load HTML from file
+        if DEBUG:
+            # Parse HTML if exists
+            if os.path.isfile(filename):
+                with open(filename, encoding="utf-8") as f: response = f.read()
+                print(f"Data loaded from {filename}")
+            
+            # Fetch HTML otherwise
+            else:
+                response = requests.get(url, headers={"user-agent": USER_AGENT}).text
+                with open(filename, "w", encoding="utf-8") as f: f.write(response)
+                print(f"Fetched data from {url}")
+
+        # Load HTML from target URL
+        else:
+            response = requests.get(url, headers={"user-agent": USER_AGENT}).text
+            print(f"Fetched data from {url}")
+        
+        # Parse HTML
+        return BeautifulSoup(response, "lxml")
+
+    # Print error on failure
+    except Exception as e: print(repr(e));</code></pre>
+            <p>The purpose of this function is simple: given a URL, obtain its HTML and return a BeautifulSoup object that we can search.</p>
+            <p>The second argument, <code>filename</code>, is used only by the debug mechanism. It tells the function where a downloaded HTML page can be stored locally.</p>
+            <h3>Handling Errors</h3>
+            <pre><code>try:
+    ...
+except Exception as e: print(repr(e));</code></pre>
+            <p>The network is not always reliable. A page might be unavailable, the internet connection might fail, or the website might return something unexpected. The <code>try</code> block allows the script to attempt the operation without immediately terminating the entire program when an exception occurs.</p>
+            <p>If something goes wrong, the <code>except</code> block prints the exception using <code>repr(e)</code>.</p>
+            <p>This is useful during development because we can see the actual Python error instead of silently failing.</p>
+            <h3>Why Keep the Response in a Variable?</h3>
+            <pre><code>response = None</code></pre>
+            <p>The variable <code>response</code> will eventually contain the downloaded HTML as a string. Initializing it with <code>None</code> makes the intended flow explicit: at the beginning, there is no HTML yet, and one of the following branches will obtain it.</p>
+            <h3>Debug Mode: Loading a Local Page</h3>
+            <pre><code>if DEBUG:
+    if os.path.isfile(filename):
+        with open(filename, encoding="utf-8") as f: response = f.read()
+        print(f"Data loaded from {filename}")</code></pre>
+            <p>When debug mode is enabled, the first question is whether the requested HTML file already exists.</p>
+            <p><code>os.path.isfile(filename)</code> returns <code>True</code> if the specified path points to an existing file.</p>
+            <p>If the file exists, Python opens it using UTF-8 encoding and reads its entire contents into <code>response</code>.</p>
+            <p>This means the scraper does not need to contact the website again. We can work with a local copy of the page.</p>
+            <p>The encoding is important because the target website contains Russian text. UTF-8 can represent Cyrillic characters correctly, so we explicitly use <code>encoding="utf-8"</code>.</p>
+            <h3>Downloading the Page</h3>
+            <p>If the local HTML file does not exist, the scraper downloads the page:</p>
+            <pre><code>response = requests.get(
+    url,
+    headers={"user-agent": USER_AGENT}
+).text</code></pre>
+            <p><code>requests.get()</code> sends an HTTP GET request to the specified URL.</p>
+            <p>The <code>headers</code> argument lets us send the User-Agent we defined earlier.</p>
+            <p>The <code>.text</code> property gives us the response body as text. In this case, that text is the HTML source code of the page.</p>
+            <h3>Saving Downloaded HTML</h3>
+            <pre><code>with open(filename, "w", encoding="utf-8") as f:
+    f.write(response)</code></pre>
+            <p>When debug mode is enabled and the requested page has not been downloaded before, the scraper saves the HTML locally.</p>
+            <p>The <code>"w"</code> mode means that Python opens the file for writing. If the file already existed, it would be replaced.</p>
+            <p>Once the file has been saved, future debug runs can read the local copy instead of downloading it again.</p>
+            <h3>Parsing HTML with BeautifulSoup</h3>
+            <pre><code>return BeautifulSoup(response, "lxml")</code></pre>
+            <p>This is where the raw HTML becomes much easier to work with.</p>
+            <p>BeautifulSoup parses the HTML and builds an object representing its structure. Instead of manually searching through a huge string, we can ask BeautifulSoup to find particular tags, IDs, classes, attributes, and other elements.</p>
+            <p>The second argument, <code>"lxml"</code>, tells BeautifulSoup which parser to use.</p>
+            <p>After this function returns, the caller receives a BeautifulSoup object rather than a plain HTML string.</p>
+            <h3>Building the Greeting-Card Database</h3>
+            <p>The main function responsible for collecting the dataset is:</p>
+            <pre><code>def fetch_greetcards():
+    ...</code></pre>
+            <p>This function coordinates the entire scraping process. It starts at the website's main page, discovers the category URLs, determines how many pages each category contains, visits those pages, finds the greeting-card images, extracts their information, and writes each card to the CSV file.</p>
+            <h3>Reporting Debug Mode</h3>
+            <pre><code>print(f"Debug mode is {"on" if DEBUG else "off"}")</code></pre>
+            <p>The script begins by printing whether debug mode is enabled.</p>
+            <p>This uses a Python conditional expression inside an f-string. If <code>DEBUG</code> is true, the expression produces <code>"on"</code>. Otherwise, it produces <code>"off"</code>.</p>
+            <p>This is a small convenience, but it is useful when running the scraper because we immediately know whether pages will be downloaded or loaded from local files.</p>
+            <h3>Starting at the Main Page</h3>
+            <pre><code>data = fetch("https://otkrytki.top/", "categories.html")</code></pre>
+            <p>The scraper first downloads the site's main page.</p>
+            <p>The result is stored in <code>data</code>. Because <code>fetch()</code> returns a BeautifulSoup object, <code>data</code> can immediately be searched for HTML elements.</p>
+            <p>The filename <code>categories.html</code> is used only when debug mode is enabled. It gives us a local copy of the page containing the site's category menu.</p>
+            <h3>Finding the Main Menu</h3>
+            <pre><code>categories = data.find(
+    "ul",
+    {"id": "primary-menu"}
+).find_all("li")</code></pre>
+            <p>Now we use the structure of the target website to locate its category menu.</p>
+            <p>The scraper looks for a <code>&lt;ul&gt;</code> element whose ID is <code>primary-menu</code>. Once that list is found, <code>find_all("li")</code> retrieves all of its list-item elements.</p>
+            <p>Conceptually, the HTML might look something like this:</p>
+            <pre><code>&lt;ul id="primary-menu"&gt;
+    &lt;li&gt;
+        &lt;a href="https://otkrytki.top/category/morning/"&gt;
+            Доброе утро
+        &lt;/a&gt;
+    &lt;/li&gt;
+    &lt;li&gt;
+        &lt;a href="https://otkrytki.top/category/monday/"&gt;
+            Понедельник
+        &lt;/a&gt;
+    &lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+            <p>We are not interested in the visible category text at this point. We primarily need the URLs because those URLs lead us to the pages containing the greeting cards.</p>
+            <h3>Extracting Category URLs</h3>
+            <pre><code>category_urls = [
+    i.find("a")["href"]
+    for i in categories
+    if "https" in i.find("a")["href"]
+]</code></pre>
+            <p>This list comprehension goes through every menu item and finds its <code>&lt;a&gt;</code> link.</p>
+            <p>The <code>["href"]</code> expression retrieves the destination URL from the link.</p>
+            <p>The condition <code>if "https" in ...</code> filters the results so that only links containing an HTTPS URL are included.</p>
+            <p>The result is a Python list containing the category URLs that the scraper will visit.</p>
+            <h3>Why Discover Categories Automatically?</h3>
+            <p>We could manually write a list of category URLs into the script, but that would make the scraper dependent on a fixed set of categories.</p>
+            <p>By reading the website's menu, the script discovers the categories dynamically. If the site contains many categories, we do not need to type every URL manually.</p>
+            <p>This is a common scraping technique: first discover the site's navigation structure, then follow the links that lead to the content we need.</p>
+            <h3>Looping Through Categories</h3>
+            <pre><code>for category in category_urls:
+    ...</code></pre>
+            <p>Now the scraper processes every discovered category one at a time.</p>
+            <p>At this point we have moved from the site's main navigation into the actual content collection stage.</p>
+            <h3>Finding the Number of Pages</h3>
+            <pre><code>data = fetch(category, "pagination.html")</code></pre>
+            <p>Before downloading all of the cards from a category, the script needs to know how many pages belong to that category.</p>
+            <p>It therefore downloads the category's first page and examines its pagination controls.</p>
+            <p>The result is again a BeautifulSoup object.</p>
+            <h3>Reading Pagination</h3>
+            <pre><code>try:
+    total_pages = max([
+        int(i.text)
+        for i in data.find_all("a", {"class": "page-numbers"})
+        if i.text
+    ])
+except:
+    total_pages = 1</code></pre>
+            <p>The website uses links with the class <code>page-numbers</code> for pagination. The scraper finds all of those links.</p>
+            <p>For each link, <code>i.text</code> contains its visible text. The list comprehension keeps the non-empty values and converts them to integers.</p>
+            <p>For example, if the page contains links for pages 1, 2, 3, 4, and 5, the resulting list becomes:</p>
+            <pre><code>[1, 2, 3, 4, 5]</code></pre>
+            <p>The <code>max()</code> function then gives us <code>5</code>, which becomes the total number of pages.</p>
+            <p>The <code>try</code>/<code>except</code> is used because some categories may not have pagination at all. If no usable page numbers can be found, the script assumes that the category has only one page.</p>
+            <h3>Why Use One Page as the Default?</h3>
+            <pre><code>except:
+    total_pages = 1</code></pre>
+            <p>A category with only one page may not have a visible pagination control. In that situation, failure to find pagination does not necessarily mean something went wrong.</p>
+            <p>The fallback value of <code>1</code> lets the scraper continue and process the first category page.</p>
+            <p>This is a useful defensive programming technique: when a website does not provide optional information, use a sensible default rather than immediately stopping the entire scraping process.</p>
+            <h3>Reporting the Page Count</h3>
+            <pre><code>print(f"Total pages: {total_pages}")</code></pre>
+            <p>The scraper prints the number of pages found for the current category. This makes the progress visible in the terminal and is useful when collecting a large dataset.</p>
+            <h3>Looping Through the Pages</h3>
+            <pre><code>for page in range(1, total_pages + 1):
+    ...</code></pre>
+            <p>Python's <code>range()</code> excludes its ending value. Therefore, <code>range(1, total_pages + 1)</code> generates every page number from <code>1</code> through <code>total_pages</code>.</p>
+            <h3>Adding a Delay Between Requests</h3>
+            <pre><code>time.sleep(1)</code></pre>
+            <p>Before requesting each page, the scraper waits for one second.</p>
+            <p>This is an important part of responsible scraping. A script can make HTTP requests much faster than a human using a browser. Without a delay, a large scraper could send a very large number of requests to the website in a short period of time.</p>
+            <p>The one-second delay slows the process down and reduces the request rate.</p>
+            <p>The exact delay is a project choice. In a real scraping project, the website's terms, robots.txt instructions, rate limits, and server behavior should also be considered. The goal is to collect the data without unnecessarily stressing the source website.</p>
+            <h3>Building the Page URL</h3>
+            <pre><code>page_url = category + "page/" + str(page)</code></pre>
+            <p>The scraper constructs the URL for each numbered page by combining the category URL with the pagination path and the current page number.</p>
+            <p>For example, if the category URL is something like:</p>
+            <pre><code>https://otkrytki.top/category/morning/</code></pre>
+            <p>the script may construct:</p>
+            <pre><code>https://otkrytki.top/category/morning/page/2</code></pre>
+            <p>The <code>str(page)</code> call converts the integer page number into text so that it can be concatenated with the strings around it.</p>
+            <h3>Downloading the Page</h3>
+            <pre><code>data = fetch(page_url, str(page) + ".html")</code></pre>
+            <p>The page is downloaded through the same <code>fetch()</code> function we already examined.</p>
+            <p>The second argument produces a filename such as <code>1.html</code>, <code>2.html</code>, or <code>3.html</code> when debug mode is enabled.</p>
+            <p>This gives us another local copy of the page that can be reused during development.</p>
+            <h3>Finding the Greeting Cards</h3>
+            <pre><code>greetcards = data.find_all(
+    "img",
+    {
+        "class":
+        "attachment-post-thumbnail size-post-thumbnail wp-post-image"
+    }
+)</code></pre>
+            <p>Now we reach the most important part of the HTML parsing.</p>
+            <p>The scraper searches for <code>&lt;img&gt;</code> elements with a particular CSS class. According to the structure of the target website, these image elements represent the greeting-card images displayed on the page.</p>
+            <p>BeautifulSoup returns all matching image elements as a list.</p>
+            <p>For example, the HTML may contain an element conceptually similar to:</p>
+            <pre><code>&lt;img
+    class="attachment-post-thumbnail size-post-thumbnail wp-post-image"
+    title="Доброе утро"
+    src="https://example.com/card.jpg"
+&gt;</code></pre>
+            <p>The scraper does not need to download the image itself. It only needs to extract the information that identifies it.</p>
+            <h3>Why Extract the Image URL Instead of the Image?</h3>
+            <p>This is an important architectural decision for the project.</p>
+            <p>We store the image URL in the CSV instead of downloading every image and putting all of those image files into our project.</p>
+            <p>As a result, the final application can remain very small. The browser reads the URL from the CSV and requests the image directly when it needs to display it.</p>
+            <p>This means our repository contains the application and dataset, but not a huge collection of greeting-card image files.</p>
+            <h3>Looping Through the Cards</h3>
+            <pre><code>for card in greetcards:
+    ...</code></pre>
+            <p>The page can contain multiple greeting cards, so the scraper processes each matching image separately.</p>
+            <p>For every image, we attempt to extract the title and image URL and then save those values into the CSV file.</p>
+            <h3>Protecting Individual Cards with try/except</h3>
+            <pre><code>try:
+    ...
+except Exception as e:
+    print(repr(e));</code></pre>
+            <p>Notice that there is another error handler around the processing of each individual card.</p>
+            <p>This is useful because one malformed or unexpected image should not necessarily stop the entire scraping process.</p>
+            <p>If one card does not have the expected attributes, the script prints the error and continues with the next card.</p>
+            <h3>Extracting the Card Data</h3>
+            <pre><code>features = {
+    "title": card["title"].replace('"', ""),
+    "url": card["src"]
+}</code></pre>
+            <p>We now create a Python dictionary containing the two pieces of information required by our application.</p>
+            <p>The <code>title</code> comes from the image element's <code>title</code> attribute.</p>
+            <p>The <code>url</code> comes from the image element's <code>src</code> attribute.</p>
+            <p>The dictionary therefore has exactly the same conceptual structure as one row in our CSV file.</p>
+            <h3>Removing Double Quotes from Titles</h3>
+            <pre><code>card["title"].replace('"', "")</code></pre>
+            <p>The scraper removes double-quote characters from the title.</p>
+            <p>This is done because the title will eventually be written into a CSV file, where quotes can have special meaning depending on the CSV representation.</p>
+            <p>The Python CSV module is capable of handling quoting correctly, so this replacement is not strictly required in every situation. In this particular scraper, however, it keeps the collected title values simpler.</p>
+            <h3>Getting HTML Attributes</h3>
+            <p>The syntax <code>card["title"]</code> is how BeautifulSoup allows us to retrieve an HTML attribute.</p>
+            <p>Similarly, <code>card["src"]</code> retrieves the image's source URL.</p>
+            <p>If the HTML contains:</p>
+            <pre><code>&lt;img title="Доброе утро" src="https://example.com/card.jpg"&gt;</code></pre>
+            <p>then:</p>
+            <pre><code>card["title"]</code></pre>
+            <p>returns the title, while:</p>
+            <pre><code>card["src"]</code></pre>
+            <p>returns the image URL.</p>
+            <h3>Writing to the CSV File</h3>
+            <pre><code>with open(
+    "greetcards.csv",
+    "a",
+    newline="",
+    encoding="utf-8"
+) as f:
+    csv_writer = csv.DictWriter(
+        f,
+        fieldnames=features.keys()
+    )
+    csv_writer.writerow(features)</code></pre>
+            <p>This code opens the CSV file and appends one new row.</p>
+            <p>The filename is <code>greetcards.csv</code>. Because the Python scraper lives inside the <code>data</code> directory, the intended working directory for running the script is the same directory, so the resulting file is also created there.</p>
+            <p>The <code>"a"</code> mode means append. Instead of replacing the existing file, Python adds new content to the end.</p>
+            <p><code>newline=""</code> is recommended when using Python's CSV module. It prevents unwanted blank lines from appearing in CSV files on some platforms.</p>
+            <p><code>encoding="utf-8"</code> is essential because our titles contain Russian Cyrillic characters.</p>
+            <h3>DictWriter</h3>
+            <pre><code>csv_writer = csv.DictWriter(
+    f,
+    fieldnames=features.keys()
+)</code></pre>
+            <p><code>csv.DictWriter</code> is designed to write dictionaries into CSV rows.</p>
+            <p>Our dictionary contains the keys <code>title</code> and <code>url</code>, so those keys become the CSV column names.</p>
+            <p>The writer then knows how to map each dictionary value to the correct column.</p>
+            <h3>Writing One Card</h3>
+            <pre><code>csv_writer.writerow(features)</code></pre>
+            <p>This writes the dictionary as one row in the CSV file.</p>
+            <p>If the dictionary contains a title and URL, one corresponding record is appended to the dataset.</p>
+            <p>The important thing to notice is that the scraper writes each card immediately rather than first storing every card in a huge Python list. This means the CSV file is progressively built while the scraper runs.</p>
+            <h3>The Final Function Call</h3>
+            <pre><code>fetch_greetcards()</code></pre>
+            <p>Defining a function does not execute its contents. Python only runs the code inside <code>fetch_greetcards()</code> when we call it.</p>
+            <p>The final line starts the complete scraping process.</p>
+            <p>The execution flow is therefore:</p>
+            <pre><code>fetch_greetcards()
+        ↓
+download the main page
+        ↓
+find category URLs
+        ↓
+for each category
+        ↓
+find total number of pages
+        ↓
+for each page
+        ↓
+download page
+        ↓
+find greeting-card images
+        ↓
+for each card
+        ↓
+extract title and image URL
+        ↓
+append data to greetcards.csv</code></pre>
+            <h3>The Complete Scraper</h3>
+            <p>Putting all of the pieces together, this is the scraper we use to build the dataset:</p>
+            <pre><code>####################################
+#
+#    Script to scrape greetcards
+#    from  https://otkrytki.top/
+#
+####################################
+
+# Packages
+import requests
+from bs4 import BeautifulSoup
+import time
+import json
+import csv
+import os
+
+# Debug mode:
+DEBUG = False
+
+# Web browser name
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36"
+
+# Fetch data from target URL
+def fetch(url, filename):
+    # Try extract data
+    try:
+        # Response holder
+        response = None
+
+        # Load HTML from file
+        if DEBUG:
+            # Parse HTML if exists
+            if os.path.isfile(filename):
+                with open(filename, encoding="utf-8") as f: response = f.read()
+                print(f"Data loaded from {filename}")
+            
+            # Fetch HTML otherwise
+            else:
+                response = requests.get(url, headers={"user-agent": USER_AGENT}).text
+                with open(filename, "w", encoding="utf-8") as f: f.write(response)
+                print(f"Fetched data from {url}")
+
+        # Load HTML from target URL
+        else:
+            response = requests.get(url, headers={"user-agent": USER_AGENT}).text
+            print(f"Fetched data from {url}")
+        
+        # Parse HTML
+        return BeautifulSoup(response, "lxml")
+    
+    # Print error on failure
+    except Exception as e: print(repr(e));
+
+# Build greetcards database
+def fetch_greetcards():
+    # Print debug mode
+    print(f"Debug mode is {"on" if DEBUG else "off"}")
+
+    # Get category URLs
+    data = fetch("https://otkrytki.top/", "categories.html")
+    categories = data.find("ul", {"id": "primary-menu"}).find_all("li")
+    category_urls = [i.find("a")["href"] for i in categories if "https" in i.find("a")["href"]]
+
+    # Loop over category URLs
+    for category in category_urls:
+        # Get pagination data
+        data = fetch(category, "pagination.html")
+
+        # Get number of total pages
+        try: total_pages = max([int(i.text) for i in data.find_all("a", {"class": "page-numbers"}) if i.text])
+        except: total_pages = 1
+        
+        # Print total pages
+        print(f"Total pages: {total_pages}")
+        
+        # Loop over page URLs
+        for page in range(1, total_pages+1):
+            # Delay between requests
+            time.sleep(1)
+            
+            # Build page URL
+            page_url = category + "page/" + str(page)
+            
+            # Get page data
+            data = fetch(page_url, str(page) + ".html")
+
+            # Get greetcards
+            greetcards = data.find_all("img", {"class": "attachment-post-thumbnail size-post-thumbnail wp-post-image"})
+            
+            # Loop over greetcards
+            for card in greetcards:
+                # Attempt extracting greetcard data
+                try:
+                    # Extract features
+                    features = {
+                        "title": card["title"].replace('"', ""),
+                        "url": card["src"]
+                    }
+                    
+                    # Store greetcard to CSV
+                    with open("greetcards.csv", "a", newline="", encoding="utf-8") as f:
+                        csv_writer = csv.DictWriter(f, fieldnames=features.keys())
+                        csv_writer.writerow(features)
+
+                # Fallback on error
+                except Exception as e: print(repr(e));
+
+# Run script
+fetch_greetcards()</code></pre>
+            <h3>Running the Scraper</h3>
+            <p>Because <code>greetcards.py</code> is located inside the <code>data</code> directory, open a terminal in that directory and run:</p>
+            <pre><code>python greetcards.py</code></pre>
+            <p>If everything works correctly, the terminal will show messages indicating which pages are being downloaded and how many pages were found for each category.</p>
+            <p>The scraper may take some time to finish because it intentionally waits one second between page requests. This is expected. The purpose is to collect the dataset carefully rather than make the process as fast as possible.</p>
+            <h3>The Resulting Dataset</h3>
+            <p>After the scraper finishes, <code>data/greetcards.csv</code> contains the information collected from the website.</p>
+            <p>The important point is that the CSV is not the application itself. It is the application's data source.</p>
+            <p>Later, the browser application will request this file:</p>
+            <pre><code>data/greetcards.csv</code></pre>
+            <p>JavaScript will read the Russian titles and image URLs, search the titles for Russian keywords, and then create the visible greeting-card elements on the page.</p>
+            <h3>The Dataset and the English Interface</h3>
+            <p>There is an important translation detail in this project. The original greeting-card website is Russian, and the collected dataset remains Russian. The book, however, presents the application interface in English.</p>
+            <p>For example, a category displayed in the application may be called <code>Good Morning</code>, but its dataset keywords remain Russian:</p>
+            <pre><code>{
+    name: "Good Morning",
+    keywords: [
+        "добрым утром",
+        "доброе утро"
+    ]
+}</code></pre>
+            <p>This is intentional. We are translating the user interface, not translating the source dataset.</p>
+            <p>If we translated the keywords into English, the application would search for English words inside Russian titles and would not find the intended cards. The displayed category name can therefore be English while the search keywords remain Russian.</p>
+            <h3>Why the Scraper Is Separate from the PWA</h3>
+            <p>The scraper is a development and data-preparation tool. The PWA does not need Python, BeautifulSoup, or requests in order to display the finished dataset.</p>
+            <p>This gives us a clean separation:</p>
+            <pre><code>Python scraper
+        ↓
+greetcards.csv
+        ↓
+JavaScript in index.html
+        ↓
+mobile interface
+        ↓
+user sees greeting cards</code></pre>
+            <p>The Python program collects the data. The CSV stores the data. The browser application consumes the data.</p>
+            <p>This separation also means that we do not need a backend server for the finished application. Once the CSV has been generated, it can simply be placed in the project's <code>data</code> directory and served as a static file.</p>
+            <h3>Why We Do Not Scrape from the Browser</h3>
+            <p>It might seem natural to let JavaScript open the greeting-card website directly and collect the cards when the user opens the application. In practice, that would introduce several problems.</p>
+            <p>Browsers enforce security restrictions such as the same-origin policy and CORS. A page hosted on our GitHub Pages domain cannot automatically make arbitrary requests to another website unless that website explicitly allows the browser request.</p>
+            <p>There is also no reason for every user to repeat the same scraping operation. We can collect the dataset once, store it as a static CSV file, and let every user load the prepared data.</p>
+            <p>That makes the final application faster, simpler, and much easier to host.</p>
+            <h3>Why We Keep the HTML Cache Files</h3>
+            <p>The scraper's debug mode is more than a convenience. It gives us a way to develop against a snapshot of the website.</p>
+            <p>Suppose the website contains one thousand greeting cards. During development, repeatedly downloading the same pages just to test a small parsing change would create unnecessary network traffic and make development slower.</p>
+            <p>With <code>DEBUG = True</code>, the first run downloads the HTML files. Later runs can reuse those files.</p>
+            <p>This allows us to experiment with BeautifulSoup selectors locally. Once the parser works correctly, we can switch debug mode off and perform the real data collection.</p>
+            <h3>A Note About Scraping and Website Changes</h3>
+            <p>Web scrapers depend on the HTML structure of the website they scrape. Our code expects a menu with the ID <code>primary-menu</code>, pagination links with the class <code>page-numbers</code>, and greeting-card images with a particular CSS class.</p>
+            <p>If the website changes its HTML structure, one or more of these selectors may stop working.</p>
+            <p>This is a normal property of web scraping. The scraper is not communicating with a formal database API that guarantees a fixed schema. It is interpreting the current HTML structure of a website.</p>
+            <p>That is another reason why the dataset should be thought of as a prepared resource. We run the scraper when we need to refresh the collection, inspect the resulting CSV, and then use that static dataset in the application.</p>
+            <h3>Why the Scraper Does Not Need to Run for Every User</h3>
+            <p>The end user of our greeting-card PWA should never need to install Python or run the scraper.</p>
+            <p>The scraper is used by the developer to prepare <code>greetcards.csv</code>. Once that file exists, the PWA can simply load it.</p>
+            <p>In other words, scraping is part of the build process, not part of the application's runtime.</p>
+            <h3>The Complete Data Pipeline</h3>
+            <p>At this point, the architecture of the project becomes much clearer.</p>
+            <pre><code>https://otkrytki.top/
+        ↓
+Python requests
+        ↓
+HTML pages
+        ↓
+BeautifulSoup
+        ↓
+category URLs
+        ↓
+paginated category pages
+        ↓
+greeting-card &lt;img&gt; elements
+        ↓
+title + image URL
+        ↓
+data/greetcards.csv
+        ↓
+JavaScript fetch()
+        ↓
+browser application
+        ↓
+category filtering
+        ↓
+greeting cards displayed to the user</code></pre>
+            <p>There is no database server in this architecture. There is no application backend. There is no API that our PWA has to call while the user is browsing.</p>
+            <p>Instead, we have a simple data pipeline: collect the information once, store it in a static file, and let the frontend consume that file.</p>
+            <div class="note">
+                <p><strong>Important:</strong> The scraper in this chapter is designed specifically around the current HTML structure expected from the source website. Before scraping a real website, check its terms of use, robots.txt instructions, and any applicable legal or technical restrictions. The one-second delay in this script is intentional and helps avoid sending requests too rapidly.</p>
+            </div>
+            <h3>What We Have at the End of This Chapter</h3>
+            <p>We now have the first major component of the project: a reproducible way to collect greeting-card data.</p>
+            <p>The Python script discovers categories, follows pagination, finds greeting-card images, extracts their Russian titles and image URLs, and writes those records into <code>data/greetcards.csv</code>.</p>
+            <p>The original website and dataset remain Russian. The English translation will happen in the application's user interface, not inside the dataset itself. This allows the application to present English category names while still searching the original Russian titles with Russian keywords.</p>
+            <p>Our project is therefore no longer just an empty HTML file. We have a real data source prepared for the application.</p>
+            <p>In the next chapter, we can return to <code>index.html</code> and build the interface that will consume this dataset. The HTML will define the structure, CSS will make it look like a mobile application, and JavaScript will finally load <code>data/greetcards.csv</code> and turn the collected records into actual greeting cards on the screen.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="preface.html">← Previous</a>
+                <a href="ui.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

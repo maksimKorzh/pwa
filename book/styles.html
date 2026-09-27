@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adding Style — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 4</div>
+            <h2>Making the Interface Look Like an App</h2>
+            <p>At the moment, if you open <code>index.html</code> in the browser, it looks rather weird. The HTML structure is already there, but the browser is showing the elements using their default appearance. The buttons look like ordinary browser buttons, the sections have no spacing or layout, and the modal has no proper visual presentation. The next step is to add CSS and completely change the way the interface looks.</p>
+            <p>CSS stands for Cascading Style Sheets. HTML describes what elements exist on the page, while CSS describes how those elements should look and how they should be arranged. In our project, HTML gives us the structure of the greeting-card application, and CSS turns that structure into something that looks much more like a mobile application.</p>
+            <h3>Adding the Style Tag</h3>
+            <p>In previous chapter, we deliberately left the <code>&lt;style&gt;</code> element empty. Now we are going to put our complete CSS inside it. The <code>&lt;style&gt;</code> element belongs inside the <code>&lt;head&gt;</code> section of <code>index.html</code>.</p>
+            <p>Our document should therefore contain a structure like this:</p>
+            <pre><code>&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+    &lt;title&gt;Greeting Cards&lt;/title&gt;
+    
+    &lt;style&gt;
+        /* Our CSS will be here */
+    &lt;/style&gt;
+&lt;/head&gt;</code></pre>
+            <p>We are not creating a separate CSS file for this project. Everything stays inside <code>index.html</code>. This keeps the application simple and makes the entire interface available in one file.</p>
+            <h3>The Complete CSS</h3>
+            <p>Here is the complete CSS for our application. After putting this code inside the <code>&lt;style&gt;</code> tag, save <code>index.html</code> and reload it in the browser.</p>
+            <pre><code>* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #f3f3f3;
+    font-family: Arial, sans-serif;
+}
+
+.sticky-controls {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    padding-top: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+#categories {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 12px;
+    background: white;
+    position: static;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+#categories::-webkit-scrollbar {
+    display: none;
+}
+
+.category-btn {
+    flex-shrink: 0;
+    border: none;
+    background: #4f46e5;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.category-btn:active {
+    transform: scale(0.98);
+}
+
+#randomBtn {
+    display: block;
+    width: calc(100% - 20px);
+    margin: 0 auto;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: #222;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#randomBtn:active {
+    transform: scale(0.98);
+}
+
+#cards {
+    padding: 10px;
+    display: grid;
+    gap: 12px;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card img {
+    width: 100%;
+    display: block;
+}
+
+.card-title {
+    padding: 10px;
+    font-size: 14px;
+}
+
+#modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: end;
+}
+
+.hidden {
+    display: none !important;
+}
+
+.modal-content {
+    width: 100%;
+    background: white;
+    padding: 20px;
+    border-radius: 20px 20px 0 0;
+}
+
+.modal-content img {
+    width: 100%;
+    border-radius: 12px;
+}
+
+.modal-content button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 12px;
+    background: #4f46e5;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}</code></pre>
+            <h3>How CSS Rules Work</h3>
+            <p>Before looking at every rule, it is useful to understand the basic structure of CSS. A CSS rule normally consists of a selector followed by one or more declarations.</p>
+            <pre><code>.card {
+    background: white;
+    border-radius: 16px;
+}</code></pre>
+            <p>The <code>.card</code> part is the selector. It tells the browser which HTML elements should receive the styles. The declarations inside the curly braces describe what should change. Here, every element with the class <code>card</code> gets a white background and rounded corners.</p>
+            <p>A selector beginning with a dot refers to a class. A selector beginning with <code>#</code> refers to an element with a particular ID. A selector such as <code>body</code> refers directly to an HTML element.</p>
+            <h3>First Rule: Box Sizing</h3>
+            <pre><code>* {
+    box-sizing: border-box;
+}</code></pre>
+            <p>The <code>*</code> selector means every element on the page. We are therefore applying <code>box-sizing: border-box</code> to everything.</p>
+            <p>This is one of the most useful defaults in modern CSS. Normally, an element's declared width describes its content area, and padding and borders can be added outside that width. With <code>border-box</code>, the declared width includes the content, padding, and border.</p>
+            <p>For example, if an element has <code>width: 100%</code> and <code>padding: 20px</code>, <code>border-box</code> prevents the padding from unexpectedly making the element wider than its available space. This is especially important on mobile screens, where horizontal space is limited.</p>
+            <h3>Removing the Browser's Default Spacing</h3>
+            <pre><code>html,
+body {
+    margin: 0;
+    padding: 0;
+}</code></pre>
+            <p>Browsers apply default margins and other spacing to some HTML elements. For an application interface, we usually want to control the spacing ourselves.</p>
+            <p>Setting <code>margin: 0</code> and <code>padding: 0</code> removes the default outer and inner spacing from the page itself. We can then add exactly the spacing we need later.</p>
+            <h3>Styling the Body</h3>
+            <pre><code>body {
+    background: #f3f3f3;
+    font-family: Arial, sans-serif;
+}</code></pre>
+            <p>The <code>body</code> contains everything the user sees on the page. We give it a very light gray background using the hexadecimal color <code>#f3f3f3</code>.</p>
+            <p>We also specify the font. The application uses Arial when it is available. The <code>sans-serif</code> part is a fallback. If Arial is not available on the device, the browser chooses another sans-serif font.</p>
+            <p>This is another useful principle for mobile-first applications: do not assume that every device has exactly the same fonts. Always provide a reasonable fallback.</p>
+            <h3>What Does Mobile-First Mean?</h3>
+            <p>Our application is designed primarily for phones. This is what we mean by a mobile-first approach.</p>
+            <p>A phone usually has much less horizontal space than a desktop monitor. Instead of designing a large desktop interface first and trying to squeeze it onto a phone later, we start with the smaller screen and make every element fit naturally.</p>
+            <p>This affects many decisions in our CSS. Buttons are large enough to tap with a finger. Cards use the available screen width. Categories can be scrolled horizontally instead of being forced into a narrow row. The modal occupies the full width of the phone and behaves like a bottom sheet.</p>
+            <p>Mobile-first does not mean that the application can only work on phones. A responsive browser automatically scales and lays out the page according to the available space. Our starting point is simply the smallest and most constrained screen.</p>
+            <h3>The Sticky Controls</h3>
+            <pre><code>.sticky-controls {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: white;
+    padding-top: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}</code></pre>
+            <p>The <code>.sticky-controls</code> element contains the main controls of our application: the random-card button and the category buttons.</p>
+            <p>The important property here is <code>position: sticky</code>. It allows the element to behave normally while the page is at the top, but when the user scrolls, the element stays attached to the top of the viewport.</p>
+            <p><code>top: 0</code> tells the browser that the element should stick to the top edge of the screen.</p>
+            <p>The <code>z-index: 100</code> places this element above other content when elements overlap. Without a sufficiently high stacking order, cards or other page elements could visually appear above the controls.</p>
+            <p>The white background is important because the controls remain visible while the user scrolls over the greeting cards. The shadow gives the fixed area a visual separation from the content below it.</p>
+            <h3>The Category Row</h3>
+            <pre><code>#categories {
+    display: flex;
+    overflow-x: auto;
+    gap: 10px;
+    padding: 12px;
+    background: white;
+    position: static;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}</code></pre>
+            <p>The categories are placed inside a horizontal scrolling container. This is particularly useful on a phone because we may have many categories, and displaying all of them at once would make the interface too narrow.</p>
+            <p><code>display: flex</code> places the category buttons next to each other in a row.</p>
+            <p><code>overflow-x: auto</code> allows horizontal scrolling when the buttons are wider than the available screen.</p>
+            <p>The <code>gap: 10px</code> creates ten pixels of space between the buttons. The <code>padding: 12px</code> adds space around the entire category area.</p>
+            <p><code>scrollbar-width: none</code> hides the scrollbar in browsers that support this property. The following rule handles WebKit-based browsers:</p>
+            <pre><code>#categories::-webkit-scrollbar {
+    display: none;
+}</code></pre>
+            <p>The scrollbar still exists functionally; we are simply hiding its visual representation. Users can still swipe the category row horizontally on a phone.</p>
+            <p>The <code>-webkit-overflow-scrolling: touch</code> property was commonly used to improve scrolling behavior on older iOS browsers. Modern browsers handle scrolling much better automatically, but keeping the property is harmless for this simple project.</p>
+            <h3>Category Buttons</h3>
+            <pre><code>.category-btn {
+    flex-shrink: 0;
+    border: none;
+    background: #4f46e5;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 999px;
+    white-space: nowrap;
+    font-size: 16px;
+    cursor: pointer;
+}</code></pre>
+            <p>These rules style every category button that our JavaScript creates.</p>
+            <p><code>flex-shrink: 0</code> is particularly important here. Because the buttons are inside a flex container, the browser could otherwise try to shrink them to make everything fit on one line. We do not want that. Each button should keep its natural width, and the user should scroll horizontally instead.</p>
+            <p><code>border: none</code> removes the browser's default button border.</p>
+            <p><code>background: #4f46e5</code> gives the button its purple-blue background, while <code>color: white</code> makes the text readable against it.</p>
+            <p>The padding gives the button enough physical size to be comfortably tapped with a finger. This is an important mobile-first consideration: a button should not be so small that users have difficulty touching it accurately.</p>
+            <p><code>border-radius: 999px</code> produces a pill-shaped button. The exact number is not important. A very large radius simply makes the corners fully rounded.</p>
+            <p><code>white-space: nowrap</code> prevents a category name from wrapping onto multiple lines. Each category therefore remains one compact button.</p>
+            <p>The <code>:active</code> rule provides a small visual response when the user presses the button.</p>
+            <pre><code>.category-btn:active {
+    transform: scale(0.98);
+}</code></pre>
+            <p>The button becomes slightly smaller while it is being pressed. This gives the interface a small amount of physical feedback.</p>
+            <h3>The Random Button</h3>
+            <pre><code>#randomBtn {
+    display: block;
+    width: calc(100% - 20px);
+    margin: 0 auto;
+    padding: 14px;
+    border: none;
+    border-radius: 14px;
+    background: #222;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}</code></pre>
+            <p>The random button is intentionally large. On a phone, a large full-width control is easier to understand and tap.</p>
+            <p><code>width: calc(100% - 20px)</code> makes the button almost as wide as its parent, leaving ten pixels of space on each side. The <code>calc()</code> function allows CSS to perform this simple calculation directly.</p>
+            <p><code>margin: 0 auto</code> centers the button horizontally. Since the available width is smaller than the parent, the automatic left and right margins distribute the remaining space evenly.</p>
+            <p>The button uses a dark background and bold text so that it is visually different from the category buttons.</p>
+            <p>It also receives the same small press effect:</p>
+            <pre><code>#randomBtn:active {
+    transform: scale(0.98);
+}</code></pre>
+            <h3>The Cards Container</h3>
+            <pre><code>#cards {
+    padding: 10px;
+    display: grid;
+    gap: 12px;
+}</code></pre>
+            <p>The <code>#cards</code> section is currently empty in our HTML. JavaScript will later create the actual greeting cards inside it.</p>
+            <p>We use CSS Grid with <code>display: grid</code>. At this stage we are deliberately keeping the layout simple: one column on the small screen. The cards will naturally occupy the available width.</p>
+            <p>The <code>gap: 12px</code> creates consistent vertical and horizontal spacing between cards.</p>
+            <p>This is a good example of mobile-first design. We do not need complicated multi-column rules just to make the first version work on a phone. The simplest layout is usually the most useful starting point.</p>
+            <h3>The Card</h3>
+            <pre><code>.card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}</code></pre>
+            <p>Every greeting card displayed by JavaScript will receive the <code>card</code> class.</p>
+            <p>The white background separates the card from the light gray page background. The rounded corners make the card look more like a modern mobile interface component.</p>
+            <p><code>overflow: hidden</code> is important because the image inside the card may reach the edges of the card. It ensures that content does not visually escape through the rounded corners.</p>
+            <p>The <code>box-shadow</code> creates a subtle shadow underneath the card. The result is a visual separation between the card and the page without requiring a visible border.</p>
+            <h3>Card Images</h3>
+            <pre><code>.card img {
+    width: 100%;
+    display: block;
+}</code></pre>
+            <p>The greeting-card image should use the full width of the card. Therefore, we set its width to <code>100%</code>.</p>
+            <p><code>display: block</code> removes the small inline-image behavior that can otherwise leave unwanted space underneath an image. It also makes the image behave more predictably inside the card.</p>
+            <h3>Card Titles</h3>
+            <pre><code>.card-title {
+    padding: 10px;
+    font-size: 14px;
+}</code></pre>
+            <p>The title appears below the image. The padding gives the text some breathing room, while the smaller font size keeps the title visually secondary to the greeting-card image.</p>
+            <h3>The Modal</h3>
+    <pre><code>#modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: end;
+}</code></pre>
+            <p>The modal is the full-screen layer that appears when the user opens a greeting card.</p>
+            <p><code>position: fixed</code> attaches the modal to the browser viewport rather than to the normal document flow. It therefore stays in place even if the underlying page has been scrolled.</p>
+            <p><code>inset: 0</code> is a convenient shorthand for setting <code>top</code>, <code>right</code>, <code>bottom</code>, and <code>left</code> all to zero. In other words, the modal covers the entire screen.</p>
+            <p>The background uses <code>rgba()</code>. The first three values represent red, green, and blue, while the fourth value is the alpha channel, which controls transparency. A value of <code>0.7</code> makes the black background partially transparent, so the page underneath is darkened rather than completely hidden.</p>
+            <p>The modal uses Flexbox with <code>display: flex</code>. The <code>align-items: end</code> rule places the modal content at the bottom of the screen. This gives us a bottom-sheet style interface that works naturally on mobile devices.</p>
+            <h3>Hiding Elements</h3>
+            <pre><code>.hidden {
+    display: none !important;
+}</code></pre>
+            <p>The modal initially has the <code>hidden</code> class. This rule completely removes it from the visual page until JavaScript removes that class.</p>
+            <p>The <code>!important</code> makes sure this rule wins over other <code>display</code> declarations that may apply to the same element. Without it, the modal's <code>display: flex</code> rule could otherwise make the element visible again.</p>
+            <p>This is a simple example of CSS and JavaScript working together. CSS defines what the hidden state looks like, while JavaScript controls when the element enters or leaves that state.</p>
+            <h3>The Modal Content</h3>
+            <pre><code>.modal-content {
+    width: 100%;
+    background: white;
+    padding: 20px;
+    border-radius: 20px 20px 0 0;
+}</code></pre>
+            <p>The modal content occupies the full available width. Its white background creates the actual bottom sheet that the user interacts with.</p>
+            <p>The four values in <code>border-radius</code> correspond to the top-left, top-right, bottom-right, and bottom-left corners. We therefore round only the two top corners.</p>
+            <p>This makes the modal look as though a panel is sliding upward from the bottom of the phone screen.</p>
+            <h3>The Modal Image</h3>
+            <pre><code>.modal-content img {
+    width: 100%;
+    border-radius: 12px;
+}</code></pre>
+            <p>The selected greeting-card image again uses the full width of its container. The rounded corners match the visual style of the rest of the application.</p>
+            <h3>Modal Buttons</h3>
+    <pre><code>.modal-content button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 12px;
+    background: #4f46e5;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}</code></pre>
+            <p>The share, copy, and close buttons all receive the same styling. They are full-width controls, which makes them easy to tap on a phone.</p>
+            <p>The vertical padding makes the buttons physically larger, while the margin separates one button from the next. The rounded corners and color match the category buttons so that the interface feels consistent.</p>
+            <h3>Why Are the Buttons So Large?</h3>
+            <p>On a desktop computer, a mouse pointer can accurately click a small button. On a phone, the user is usually tapping with a finger. A tiny target is therefore much harder to use.</p>
+            <p>For this reason, mobile interfaces generally benefit from sufficiently large touch targets, comfortable spacing, and controls that are easy to recognize without precise pointing.</p>
+            <p>Our CSS uses padding and full-width buttons to achieve this without requiring complicated calculations or device-specific code.</p>
+            <h3>Why Do We Use IDs and Classes?</h3>
+            <p>Notice that our CSS uses both selectors such as <code>#randomBtn</code> and selectors such as <code>.category-btn</code>.</p>
+            <p>The <code>#</code> selector targets one specific element by its ID. We use this for elements such as the random button, cards container, and modal.</p>
+            <p>The <code>.</code> selector targets a class. We use classes when many elements can share the same appearance. Every category button can therefore use <code>category-btn</code>, and every generated greeting card can use <code>card</code>.</p>
+            <p>This distinction will become particularly important when we start writing JavaScript. The IDs give JavaScript direct access to important elements, while classes allow CSS to style groups of generated elements consistently.</p>
+            <h3>CSS and JavaScript Are Separate Responsibilities</h3>
+            <p>One useful principle in this project is that CSS should generally describe appearance, while JavaScript should control behavior.</p>
+            <p>For example, JavaScript will eventually create a category button and assign it the <code>category-btn</code> class. JavaScript does not need to know that the button should be purple, rounded, or padded. CSS already knows that because of the class.</p>
+            <p>Similarly, JavaScript will add or remove the <code>hidden</code> class from the modal. JavaScript does not need to manipulate every visual property of the modal. CSS handles the visual states.</p>
+            <p>This separation makes the application easier to understand and maintain. If we later decide to change the color of every category button, we only need to change the CSS rule instead of changing the JavaScript that creates the buttons.</p>
+            <h3>Why We Put All CSS in One File</h3>
+            <p>In a larger application, CSS is often stored in one or more separate files. For our project, however, keeping the CSS inside <code>index.html</code> has several advantages.</p>
+            <p>First, there are fewer files to manage. Second, the entire interface is contained in one source file. Third, the service worker can cache the application shell without having to manage a separate stylesheet dependency.</p>
+            <p>This approach is especially convenient for a beginner project where the goal is to understand how the pieces work together rather than introduce a large project structure.</p>
+            <div class="note">
+                <p><strong>Important:</strong> The CSS above is written for a mobile-first interface. We are starting with the phone layout instead of trying to build a desktop layout and then squeeze it onto a small screen. Later, if the project needs a more elaborate desktop presentation, media queries can be added without changing the basic mobile structure.</p>
+            </div>
+            <h3>What Has Changed?</h3>
+            <p>If you reload <code>index.html</code> now, the page should look very different from the raw HTML version. The controls have spacing and colors, the random button is large and easy to tap, the category area is prepared for horizontal scrolling, and the modal has the appearance of a mobile bottom sheet.</p>
+            <p>However, there is an important detail: the application is still empty.</p>
+            <p>The CSS has completely changed the appearance of the interface, but CSS does not create greeting cards. Our <code>#cards</code> section is still empty because we have not written the JavaScript that loads the CSV dataset and generates the cards yet.</p>
+            <p>So now the application looks much more like a real mobile app: it is filled with styles, spacing, colors, buttons, cards, and a modal design, but there is still no greeting-card data being loaded. In the next step, we will give the application something to actually work with.</p>
+            <nav class="chapter-nav-bottom">
+                <a href="ui.html">← Previous</a>
+                <a href="next.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>

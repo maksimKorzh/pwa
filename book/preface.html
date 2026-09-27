@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preface — PWA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="book">
+        <article class="chapter">
+            <nav class="chapter-nav">
+                <a href="contents.html">← Contents</a>
+            </nav>
+            <div class="chapter-label">Chapter 1</div>
+            <h2>Preface</h2>
+            <h3>What Is a PWA?</h3>
+            <p class="lead">A Progressive Web App, or PWA, is a web application that uses modern browser features to behave much more like a traditional mobile application. It is still built with the technologies of the web — HTML, CSS, and JavaScript — but it can be installed on a device, launched like an app, and in many cases continue working when the internet connection is unavailable.</p>
+            <p>The interesting thing about a PWA is that there is no completely separate application for Android, another application for iOS, and another application for the desktop. The same web application can be opened in a browser on all of these platforms.</p>
+            <p>This makes PWAs particularly interesting when application performance is not the most important requirement, but having the same user interface and the same behavior across different platforms is important.</p>
+            <p>Imagine building an application where the interface should look and behave the same way on an Android phone, an iPhone, a Windows PC, and a Mac. With traditional native development, this can mean maintaining different codebases and learning different development environments. With a PWA, the core application can be the same everywhere.</p>
+            <div class="note">
+                <div class="note-title">One Application, Multiple Platforms</div>
+                <p>A PWA uses the web as its common platform. The same HTML, CSS, and JavaScript application can run in browsers on phones, tablets, laptops, and desktop computers.</p>
+            </div>
+            <h3>Why PWAs Are So Cool</h3>
+            <p>One of the biggest advantages of a PWA is cross-platform compatibility.</p>
+            <p>There are situations where native applications make perfect sense. Games, graphics-heavy applications, applications that require intensive hardware access, and software where every last bit of performance matters can benefit from native development.</p>
+            <p>But there is another large category of applications where maximum performance is simply not the main concern. For a simple utility, information service, catalog, greeting-card application, booking interface, or many other everyday applications, a modern browser is already fast enough.</p>
+            <p>In these cases, the ability to build the interface once and use it across multiple systems can be much more valuable than squeezing every possible bit of performance out of the application.</p>
+            <p>Our greeting-card application is a good example. There is no complicated 3D graphics engine, no heavy calculations, and no reason to write separate user interfaces for Android and iOS. We mainly need to display images, let the user select categories, and provide convenient ways to share a card.</p>
+            <h3>HTML, CSS, and JavaScript Are Enough</h3>
+            <p>Another reason I like the PWA approach is its simplicity.</p>
+            <p>To build our application, we do not need to learn Android development with Java or Kotlin. We do not need to build a separate iOS application using Apple's native development tools and languages. We can build the entire application with three technologies that have been part of the web for decades: HTML, CSS, and JavaScript.</p>
+            <p>HTML describes the content and structure. CSS controls how everything looks. JavaScript provides the application logic and interaction.</p>
+            <p>That is essentially our entire development stack.</p>
+            <p>This is especially useful for beginners because the learning curve is much smaller. If you already know a little HTML, you can start building something useful immediately. You can gradually learn CSS and JavaScript as the project becomes more sophisticated.</p>
+            <p>There is also something psychologically important about this approach. You can see your application working very early in the process. You write some HTML, open the file in a browser, and there it is.</p>
+            <h3>You Do Not Need a Phone to Build a Phone App</h3>
+            <p>One of the nicest things about web development is that the development environment can simply be your computer.</p>
+            <p>You do not need to have an Android phone sitting next to you while developing the application. You do not need an iPhone either. You can write the application on a normal PC and open it in a desktop browser while you are developing it.</p>
+            <p>Modern browsers also provide developer tools that make it possible to simulate different screen sizes and inspect how the application behaves on mobile devices.</p>
+            <p>Of course, testing on real phones is useful before releasing an application. Different devices have different screens, browsers, operating systems, and behaviors. But the important point is that a phone is not a requirement for getting started.</p>
+            <div class="note">
+                <div class="note-title">Your PC Is Your Development Device</div>
+                <p>Write the application on your computer, open it in a browser, use browser developer tools to test mobile layouts, and only later test the finished application on actual phones.</p>
+            </div>
+            <h3>Your Favourite Mobile App on Your PC</h3>
+            <p>There is another practical advantage that is easy to overlook.</p>
+            <p>Sometimes you discover an application on your phone that you really like and then wonder why there is no desktop version of it. You might want to use the same application while sitting at your computer, but installing a completely separate desktop application may not be possible.</p>
+            <p>With a web application, the answer can be remarkably simple: open the browser.</p>
+            <p>If the application is designed as a PWA, it can potentially be used directly from the browser or installed as an application-like experience on the desktop. The same application can therefore follow the user between their phone and computer without requiring us to build two completely different products.</p>
+            <h3>Our Project: A Greeting Cards App</h3>
+            <p>To make all of these ideas practical, we are going to build something real rather than creating a theoretical example.</p>
+            <p>Our project will be a greeting-card application.</p>
+            <p>The idea is simple. The application contains a collection of greeting cards. The user chooses a category such as Good Morning, I love you, or another type of greeting, and the application displays cards belonging to that category.</p>
+            <p>The user can then select a card and share it using the messaging and sharing capabilities available on their device.</p>
+            <p>This is a surprisingly useful application for a PWA because the requirements are almost exactly what the web is good at. We need a simple interface, a collection of images, some filtering logic, and a way to share the selected card.</p>
+            <p>There is no complicated server-side application behind it. There is no user account system. There is no payment system. There is no complicated database that needs to be maintained.</p>
+            <p>And this brings us to another interesting part of the project.</p>
+            <h3>An Ad-Free Application</h3>
+            <p>Our application will be completely ad-free.</p>
+            <p>This is important because many simple websites and applications are built around advertising. The application constantly needs to communicate with an advertising service, display banners, track interactions, and make the interface more complicated.</p>
+            <p>We do not need any of that.</p>
+            <p>The application is also frontend-only. There is no custom backend server that we need to rent, maintain, update, and pay for every month.</p>
+            <p>For a beginner, this is a major advantage. A project like this can be hosted using a free static hosting service such as GitHub Pages. You can therefore build a real application, publish it on the internet, and have essentially no server costs.</p>
+            <p>This makes the project particularly friendly to someone who is learning. You can experiment with it without first having to understand Linux servers, databases, backend frameworks, cloud infrastructure, or server deployment.</p>
+            <div class="note">
+                <div class="note-title">A Free Project to Learn With</div>
+                <p>Because our application is frontend-only and consists of static files, it can be hosted on free static hosting. You can build and publish the entire project without paying for a backend server.</p>
+            </div>
+            <h3>Replacing the Backend With a CSV File</h3>
+            <p>At this point, you might be wondering where all of our greeting cards will come from.</p>
+            <p>A traditional application might use a backend server connected to a database. The database could contain thousands of greeting cards, their titles, categories, image URLs, and other information. The frontend would send a request to the backend, the backend would query the database, and the results would be returned to the browser.</p>
+            <p>We are going to do something much simpler.</p>
+            <p>Our entire dataset will be a CSV file.</p>
+            <p>CSV stands for Comma-Separated Values. It is one of the simplest ways to represent structured data. A row in our file can contain a greeting-card title and the URL of its image.</p>
+            <p>For example, conceptually, a row might look like this:</p>
+            <p><code>Good Morning Card,https://example.com/images/good-morning.jpg</code></p>
+            <p>That tiny piece of data gives our application everything it needs to display the card: a title and an image URL.</p>
+            <p>Instead of maintaining a database server, we can simply serve this CSV file as another static file alongside our application.</p>
+            <h3>Where Does the CSV Come From?</h3>
+            <p>The interesting part is that we do not have to type thousands of greeting cards into the CSV file manually.</p>
+            <p>We can obtain the dataset by scraping a greeting-card website. A scraper can visit the relevant pages, collect the card titles and image URLs, and save the resulting information into our CSV file.</p>
+            <p>This creates a very simple architecture.</p>
+            <p>First, we collect the information from an existing website. Then we save the useful information as a CSV dataset. Finally, our PWA reads that dataset directly in the browser.</p>
+            <p>The result is a project where the scraping process and the application itself can remain completely separate. The PWA does not need to know how the dataset was created. It simply knows that a CSV file exists and contains cards.</p>
+            <div class="note">
+                <div class="note-title">Our Simple Data Pipeline</div>
+                <p>Greeting-card website → scrape titles and image URLs → create CSV → PWA loads CSV → JavaScript searches the data → matching cards appear in the application.</p>
+            </div>
+            <h3>Searching the Dataset With Keywords</h3>
+            <p>Once the CSV is loaded, we need a way to find the right cards.</p>
+            <p>This is where our categories come in.</p>
+            <p>A category can contain one or more keywords. For example, a category called <strong>Good Morning</strong> might contain the keywords <code>"good morning"</code> and <code>"good morning greetings"</code>.</p>
+            <p>When the user selects the category, JavaScript goes through the cards in the CSV and looks at their titles. If one of the category's keywords appears in the title, that card becomes a match.</p>
+            <p>The application can then select some of those matching cards and display them to the user.</p>
+            <p>This is a very simple form of search, but it is enough for our project. We do not need a search engine, database queries, or a backend API. JavaScript can perform the filtering directly inside the browser.</p>
+            <p>For a beginner, this is a useful lesson in itself. A database is not automatically necessary just because an application contains data. If the dataset is reasonably small and mostly static, a simple file and some JavaScript can sometimes do the job perfectly well.</p>
+            <h3>We Do Not Host the Images</h3>
+            <p>There is one important detail about our architecture.</p>
+            <p>Although our CSV contains image URLs, we are not going to download all of those images and put them on our own server.</p>
+            <p>The images already exist online. Our dataset simply remembers where they are.</p>
+            <p>When the application displays a greeting card, the browser requests the image from the URL contained in the CSV. Our application is therefore reusing the fact that those images are already available online rather than creating another copy of the entire image collection.</p>
+            <p>This keeps our project extremely small. We are storing information about the cards rather than storing the cards themselves.</p>
+            <p>There is also an important practical consideration here: the availability and terms of use of externally hosted images are determined by the site that provides them. Our application should therefore only use content and URLs in ways that are permitted by the relevant source and applicable law.</p>
+            <h3>PWA Caching</h3>
+            <p>Another important part of a PWA is caching.</p>
+            <p>A service worker can tell the browser to keep copies of important application files locally. This means that after the application has been opened once, some of its resources can be available even when the network connection is temporarily unavailable.</p>
+            <p>Our caching strategy is deliberately simple.</p>
+            <p>We can cache the application's main HTML file and the CSV dataset. The browser can then load the application interface and its card data from its local cache.</p>
+            <p>We are not attempting to cache the entire collection of greeting-card images. Remember, we do not own those image files and we are not hosting them ourselves. We only have their URLs.</p>
+            <p>This distinction keeps the PWA lightweight and makes the architecture easier to understand.</p>
+            <div class="note">
+                <div class="note-title">What We Cache</div>
+                <p>Our PWA caches the application itself and its CSV dataset. The greeting-card images remain at their original online URLs and are loaded from those URLs when needed.</p>
+            </div>
+            <h3>Why Keep Everything in One Source File?</h3>
+            <p>For this project, I also want to deliberately keep the application simple by putting the essential HTML, CSS, and JavaScript into a single <code>index.html</code> file.</p>
+            <p>Normally, a web application can be divided into many files. You might have <code>index.html</code>, <code>style.css</code>, several JavaScript files, configuration files, modules, and other resources.</p>
+            <p>That approach makes perfect sense for larger applications. But our project is small, and there is another advantage to keeping the essential application code together: portability.</p>
+            <p>You can take the single HTML file and understand that the main application is inside it. There is no need to search through a complicated directory structure just to discover where the interface or application logic lives.</p>
+            <p>It also makes the project easy to copy, experiment with, and learn from.</p>
+            <p>There is another reason that becomes particularly useful when we discuss caching and updates.</p>
+            <h3>Simple Updates for the User</h3>
+            <p>When an application consists of many cached files, updating it can become surprisingly complicated for beginners. A browser might still have an old version of one JavaScript file, an old stylesheet, or an old application shell in its cache.</p>
+            <p>Then someone changes the application and discovers that a user is still seeing the previous version.</p>
+            <p>For our small project, we can keep the update process much easier to understand. The main application lives in one source file, and the service worker manages the cached version of that application.</p>
+            <p>When we publish an updated version, the browser can retrieve the new application as part of the normal PWA update process. The user should not have to be taught how to open browser settings, find cookies, clear storage, delete caches, and repeat the process every time we make a change.</p>
+            <p>The goal is simple: update the project, publish it, and let the browser handle the update process.</p>
+            <div class="note">
+                <div class="note-title">Keep the Update Process Simple</div>
+                <p>A small, portable application is easier to cache and easier to update. The user should not need technical instructions about deleting cookies or clearing browser storage just because the application has received an update.</p>
+            </div>
+            <h3>A Small Application With a Real Architecture</h3>
+            <p>Although our greeting-card application is intentionally simple, it still contains many of the pieces found in much larger applications.</p>
+            <p>We have a user interface built with HTML and CSS. We have application logic written in JavaScript. We have structured data in a CSV file. We have external resources represented by URLs. We have client-side searching and filtering. We have sharing functionality. We have browser caching through a service worker. And we have deployment through static hosting.</p>
+            <p>In other words, this little application gives us an opportunity to explore a complete application architecture without first having to build a complicated backend.</p>
+            <p>That is exactly why I like this project as a learning example.</p>
+            <h3>What We Are Going to Build</h3>
+            <p>By the end of this project, we will have a real PWA that can be opened in a browser, installed on supported devices, and used as a simple greeting-card application.</p>
+            <p>The user will be able to choose a category, see matching greeting cards, open a card, and share it with other people using the sharing features of their device.</p>
+            <p>Behind that simple interface will be a deliberately lightweight architecture: a single application source file, a CSV dataset, a service worker for caching, and externally hosted image resources referenced by URL.</p>
+            <p>There is something satisfying about this approach. We are not starting with a server, a database, a cloud account, or a large framework. We are starting with a browser and a few basic web technologies.</p>
+            <p>From there, we will gradually turn a simple webpage into something that behaves like an application.</p>
+            <p>That is the main idea of this book: <strong>build once, run across platforms, and keep the technology as simple as possible.</strong></p>
+            <nav class="chapter-nav-bottom">
+                <a href="contents.html">← CONTENTS</a>
+                <a href="data.html" class="next">Next →</a>
+            </nav>
+        </article>
+    </main>
+</body>
+</html>
